@@ -1,3 +1,40 @@
-POST http://localhost:3001/api/users
+GET http://localhost:3001/api/users
 
 ###
+
+POST http://localhost:3001/api/users
+Content-Type: application/json
+
+{
+  "username": "SuperSponge123",
+  "name": "SpongeBob Squarepants",
+  "password": "gary"
+}
+
+###
+POST http://localhost:3001/api/users
+Content-Type: application/json
+
+{
+  "username": "PatBack789",
+  "name": "Patrick Star",
+  "password": "uhhhhhhh"
+}
+
+###
+POST http://localhost:3001/api/login
+Content-Type: application/json
+
+{
+  "username": "SuperSponge123",
+  "password": "gary"
+}
+
+###
+POST http://localhost:3001/api/login
+Content-Type: application/json
+
+{
+  "username": "JohnDoe123",
+  "password": "LMAO"
+}
