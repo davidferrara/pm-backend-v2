@@ -1,4 +1,5 @@
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
+const logger = require('../utils/logger');
 const usersRouter = require('express').Router();
 const userSheetService = require('../utils/userSheetService');
 
@@ -9,30 +10,29 @@ usersRouter.get('/', async (request, response) => {
   response.json(users);
 });
 
-// Create a new user
-usersRouter.post('/', async (request, response) => {
-  const { username, name, password } = request.body;
 
-  const existingUser = await userSheetService.findUserByUsername(username);
-  if (existingUser) {
-    return response.status(400).json({ error: 'Username already exists.' });
-  }
+usersRouter.put('/:id', async (request, response) => {
+  const user = request.user;
+  console.log('user:', user);
 
-  const saltRounds = 10;
-  const passwordHash = await bcrypt.hash(password, saltRounds);
+  // if (user.privilages !== 'ADMIN') {
+  //   logger.info(`User ${user.username} does not have admin privilages.`);
+  //   return response.status(401).json({ 'error': 'You do not have admin privilages' });
+  // }
 
-  const user = {
-    id: '',
-    username,
-    name,
-    passwordHash,
-    enabled: false,
-    privilages: 'EMPLOYEE',
-    products: ''
-  };
+  // const id = request.params.id;
+  // console.log('id:', id);
+  // const userToChange = await userSheetService.findUserById(id);
+  // console.log('userToChange:', userToChange);
+  // if (!userToChange) {
+  //   return response.status(404).json({ 'error': 'User not found' });
+  // }
+  // userToChange.enabled = !userToChange.enabled;
 
-  const savedUser = await userSheetService.saveUser(user);
-  response.status(201).json(savedUser);
+  // const updatedUser = await userSheetService.findByIdAndUpdate(id, userToChange);
+
+  // response.json(updatedUser);
+  response.json({ message: 'update user enpoint' });
 });
 
 module.exports = usersRouter;

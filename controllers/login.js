@@ -8,13 +8,9 @@ loginRouter.post('/', async (request, response) => {
   const { username, password } = request.body;
 
   const user = await userSheetService.findUserByUsername(username);
-  console.log(user);
-  // console.log(user.passwordHash);
   const passwordCorrect = user === undefined
     ? false
     : await bcrypt.compare(password, user.passwordHash);
-
-  console.log(passwordCorrect);
 
   if (!(user && passwordCorrect)) {
     return response.status(401).json({

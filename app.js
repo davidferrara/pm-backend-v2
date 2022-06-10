@@ -5,7 +5,7 @@ require('express-async-errors');
 const app = express();
 const cors = require('cors');
 const loginRouter = require('./controllers/login');
-const adminRouter = require('./controllers/admin');
+const registerRouter = require('./controllers/register');
 const usersRouter = require('./controllers/users');
 const productsRouter = require('./controllers/products');
 const middleware = require('./utils/middleware');
@@ -18,8 +18,8 @@ app.use(middleware.requestLogger);
 
 app.use(middleware.tokenExtractor);
 app.use('/api/login', loginRouter);
-app.use('/api/admin', middleware.userExtractor, adminRouter);
-app.use('/api/users', usersRouter);
+app.use('/api/register', registerRouter);
+app.use('/api/users', middleware.userExtractor, usersRouter);
 app.use('/api/products', middleware.userExtractor, productsRouter);
 
 // if(process.env.NODE_ENV === 'test') {

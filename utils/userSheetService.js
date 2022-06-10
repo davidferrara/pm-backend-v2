@@ -2,14 +2,17 @@ const ObjectID = require('bson').ObjectID;
 const { google } = require('googleapis');
 const config = require('./config');
 const {
-  convertToUserObject,
-  convertToUserArray
+  convertToUserObjects,
+  convertToUserArrays
 } = require('../models/User');
 const { validateUser } = require('./validation');
+const logger = require('./logger');
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const spreadsheetId = config.SPREADSHEET_ID;
-const sheetService = this;
+const userSheetId = config.USER_SHEET_ID;
+const userSheetService = this;
+
 
 const authentication = async () => {
   const auth = new google.auth.GoogleAuth({
@@ -25,7 +28,12 @@ const authentication = async () => {
   return { sheets };
 };
 
-sheetService.getAllUsers = async () => {
+// Returns the row index from a Range.
+const getRow = (range) => parseInt(range.match(/\d+/));
+
+
+// Returns all users.
+userSheetService.getAllUsers = async () => {
   const { sheets } = await authentication();
   const request = {
     spreadsheetId,
@@ -35,12 +43,14 @@ sheetService.getAllUsers = async () => {
   response.shift(); // Removes the tableheader from the data
 
 
-  const users = convertToUserObject(response);
+  const users = convertToUserObjects(response);
 
   return users;
 };
 
-sheetService.findUserByUsername = async (username) => {
+
+// Returns a user or undefined if not found.
+userSheetService.findUserByUsername = async (username) => {
   const { sheets } = await authentication();
   const request = {
     spreadsheetId,
@@ -50,13 +60,37 @@ sheetService.findUserByUsername = async (username) => {
   response.shift(); // Removes the tableheader from the data
 
 
-  const users = convertToUserObject(response);
+  const users = convertToUserObjects(response);
   const user = users.find(u => u.username === username);
 
   return user;
 };
 
-sheetService.findUserById = async (id) => {
+
+// Returns a user or undefined if not found.
+userSheetService.findUserById = async (id) => {
+  const { sheets } = await authentication();
+
+  const request = {
+    spreadsheetId,
+    requestBody: {
+      dataFilters: [
+        {
+          developerMetadataLookup: {
+            metadataValue: id,
+          }
+        }
+      ]
+    }
+  };
+
+  const response = await sheets.spreadsheets.developerMetadata.search(request);
+  console.log(response.data.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange);
+  
+};
+
+
+userSheetService.findUserByIdAndUpdate = async (id, userChanges) => {
   const { sheets } = await authentication();
   const request = {
     spreadsheetId,
@@ -66,21 +100,38 @@ sheetService.findUserById = async (id) => {
   response.shift(); // Removes the tableheader from the data
 
 
-  const users = convertToUserObject(response);
+  const users = convertToUserObjects(response);
   const user = users.find(u => u.id === id);
 
-  return user;
+  validateUser(userChanges);
+  user = convertToUserArrays([user]);
+
+  // const request = {
+  //   spreadsheetId,
+  //   range: 'Users',
+  //   valueInputOption: 'RAW',
+  //   includeValuesInResponse: true,
+  //   responseValueRenderOption: 'UNFORMATTED_VALUE',
+  //   resource: {
+  //     values: user
+  //   }
+  // };
+
+  // // const response = (await sheets.spreadsheets.values.append(request)).data.updates.updatedData.values;
+  // const savedUser = convertToUserObject(response);
+  return savedUser;
 };
 
-sheetService.saveUser = async (user) => {
+userSheetService.saveNewUser = async (user) => {
   const { sheets } = await authentication();
+
   const id = new ObjectID();
   user.id = id.toString();
 
   validateUser(user);
-  user = convertToUserArray([user]);
+  user = convertToUserArrays([user]);
 
-  const request = {
+  const appendRequest = {
     spreadsheetId,
     range: 'Users',
     valueInputOption: 'RAW',
@@ -91,9 +142,44 @@ sheetService.saveUser = async (user) => {
     }
   };
 
-  const response = (await sheets.spreadsheets.values.append(request)).data.updates.updatedData.values;
-  const savedUser = convertToUserObject(response);
+  const appendResponse = (await sheets.spreadsheets.values.append(appendRequest)).data.updates.updatedData;
+  const range = appendResponse.range;
+
+  const endIndex = getRow(range);
+  const startIndex = endIndex - 1;
+  logger.info(`startIndex: ${startIndex}\nendIndex: ${endIndex}`);
+
+  const values = appendResponse.values;
+  const savedUser = convertToUserObjects(values);
+
+  const metaDataRequest = {
+    spreadsheetId,
+    // requestBody must be key:value pairs
+    requestBody: {
+      requests: [
+        {
+          createDeveloperMetadata: {
+            developerMetadata: {
+              metadataKey: 'id',
+              metadataValue: id,
+              location: {
+                dimensionRange: {
+                  sheetId: userSheetId,
+                  dimension: 'ROWS',
+                  startIndex,
+                  endIndex,
+                }
+              },
+              visibility: 'DOCUMENT',
+            }
+          }
+        }
+      ]
+    },
+  };
+
+  await sheets.spreadsheets.batchUpdate(metaDataRequest);
   return savedUser;
 };
 
-module.exports = sheetService;
+module.exports = userSheetService;

@@ -9,7 +9,7 @@ const userKeys = [
 ];
 
 //Takes array of arrays
-const convertToUserObject = (array) => {
+const convertToUserObjects = (array) => {
   let result = [];
 
   for (let i = 0; i < array.length; i++) {
@@ -24,7 +24,7 @@ const convertToUserObject = (array) => {
 };
 
 //Takes array of arrays
-const convertToUserArray = (array) => {
+const convertToUserArrays = (array) => {
   let result = [];
 
   for (let i = 0; i < array.length; i++) {
@@ -36,6 +36,6 @@ const convertToUserArray = (array) => {
 };
 
 module.exports = {
-  convertToUserObject,
-  convertToUserArray
+  convertToUserObjects,
+  convertToUserArrays
 };

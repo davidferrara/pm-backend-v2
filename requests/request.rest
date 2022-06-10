@@ -2,7 +2,7 @@ GET http://localhost:3001/api/users
 
 ###
 
-POST http://localhost:3001/api/users
+POST http://localhost:3001/api/register
 Content-Type: application/json
 
 {
@@ -12,13 +12,34 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:3001/api/users
+
+POST http://localhost:3001/api/register
+Content-Type: application/json
+
+{
+  "username": "MoneyMonger",
+  "name": "Eugene Krabs ",
+  "password": "ilovemoney"
+}
+
+###
+POST http://localhost:3001/api/register
 Content-Type: application/json
 
 {
   "username": "PatBack789",
   "name": "Patrick Star",
   "password": "uhhhhhhh"
+}
+
+###
+POST http://localhost:3001/api/register
+Content-Type: application/json
+
+{
+  "username": "UltimateRuler",
+  "name": "Sheldon Plankton",
+  "password": "chum"
 }
 
 ###
@@ -37,4 +58,13 @@ Content-Type: application/json
 {
   "username": "JohnDoe123",
   "password": "LMAO"
+}
+
+###
+PUT http://localhost:3001/api/users/62a25ad7c3b83c3d305fe7f2
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTQ4MDczNTcsImV4cCI6MTY1NDgzOTc1N30.WUHbGcQahv1px-_10IeRXYcj4fWLlL9nlPWR17D_ptU
+
+{
+  "username": "MrBossMan"
 }
