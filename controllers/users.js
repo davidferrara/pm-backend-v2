@@ -15,24 +15,36 @@ usersRouter.put('/:id', async (request, response) => {
   const user = request.user;
   console.log('user:', user);
 
-  // if (user.privilages !== 'ADMIN') {
-  //   logger.info(`User ${user.username} does not have admin privilages.`);
-  //   return response.status(401).json({ 'error': 'You do not have admin privilages' });
-  // }
+  if (user.privilages !== 'ADMIN') {
+    logger.info(`User ${user.username} does not have admin privilages.`);
+    return response.status(401).json({ 'error': 'You do not have admin privilages' });
+  }
 
-  // const id = request.params.id;
-  // console.log('id:', id);
-  // const userToChange = await userSheetService.findUserById(id);
-  // console.log('userToChange:', userToChange);
-  // if (!userToChange) {
-  //   return response.status(404).json({ 'error': 'User not found' });
-  // }
-  // userToChange.enabled = !userToChange.enabled;
+  const id = request.params.id;
+  console.log('id:', id);
+  const userToChange = await userSheetService.findUserById(id);
+  console.log('userToChange:', userToChange);
+  if (!userToChange) {
+    return response.status(404).json({ 'error': 'User not found' });
+  }
+  console.log(request.body);
+  if (request.body.id) {
+    return response.status(400).json({ 'error': 'malformed request' });
+  }
+  if (request.body.privilages || request.body.enabled) {
+    if (user.privilages !== 'ADMIN') {
+      logger.info(`User ${user.username} does not have admin privilages.`);
+      return response.status(401).json({ 'error': 'You do not have admin privilages' });
+    }
+  }
 
-  // const updatedUser = await userSheetService.findByIdAndUpdate(id, userToChange);
+  const changedUser = Object.assign(userToChange, request.body);
+  console.log('changedUser', changedUser);
 
-  // response.json(updatedUser);
-  response.json({ message: 'update user enpoint' });
+  const updatedUser = await userSheetService.saveUser(changedUser);
+
+  response.json(updatedUser);
+  // response.json({ message: 'LOLOLOLOLOL' });
 });
 
 module.exports = usersRouter;

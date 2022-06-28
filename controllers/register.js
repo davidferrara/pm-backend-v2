@@ -1,6 +1,8 @@
 const registerRouter = require('express').Router();
 const userSheetService = require('../utils/userSheetService');
 const bcrypt = require('bcrypt');
+const ObjectID = require('bson').ObjectID;
+const { User, validateUser } = require('../models/User');
 // const logger = require('../utils/logger');
 
 // Create a new user
@@ -15,18 +17,21 @@ registerRouter.post('/', async (request, response) => {
   const saltRounds = 10;
   const passwordHash = await bcrypt.hash(password, saltRounds);
 
-  const user = {
-    id: '',
+  const user = Object.seal(new User(
+    new ObjectID().toString(),
     username,
     name,
     passwordHash,
-    enabled: false,
-    privilages: 'EMPLOYEE',
-    products: ''
-  };
+    false,
+    'EMPLOYEE',
+    []
+  ));
 
-  const savedUser = await userSheetService.saveNewUser(user);
-  response.status(201).json(savedUser);
+  validateUser(user);
+  console.log(user);
+
+  // const savedUser = await userSheetService.saveUser(user);
+  // response.status(201).json(savedUser);
 });
 
 module.exports = registerRouter;

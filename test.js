@@ -1,13 +1,11 @@
 const ObjectID = require('bson').ObjectID;
 const { google } = require('googleapis');
 const config = require('./utils/config');
-const { convertToUserArray } = require('./models/User');
+const { convertToUserArrays } = require('./models/User.org');
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 const spreadsheetId = config.SPREADSHEET_ID;
 const userSheetId = config.USER_SHEET_ID;
-
-
 
 const user = {
   id: '',
@@ -19,6 +17,7 @@ const user = {
   products: ''
 };
 
+const convertRowToRange = (row) => `Users!A${row}:G${row}`;
 
 const authentication = async () => {
   const auth = new google.auth.GoogleAuth({
@@ -32,6 +31,27 @@ const authentication = async () => {
   });
 
   return { sheets };
+};
+
+const getUserByID = async (id) => {
+  const { sheets } = await authentication();
+
+  const request = {
+    spreadsheetId,
+    requestBody: {
+      dataFilters: [
+        {
+          developerMetadataLookup: {
+            metadataValue: id,
+          }
+        }
+      ]
+    }
+  };
+
+  const response = await sheets.spreadsheets.developerMetadata.search(request);
+  console.log(response.data.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex);
+
 };
 
 const saveNewUser = async () => {
@@ -172,5 +192,6 @@ const deleteMetaData = async () => {
 
 // saveNewUser();
 // getMetaData('62a10353dec79703a422e39d');
-getMetaData2();
+// getMetaData2();
 // deleteMetaData();
+getUserByID('62a25adac3b83c3d305fe7f3');

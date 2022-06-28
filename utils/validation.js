@@ -9,6 +9,9 @@ const validateUser = (user) => {
   if(user.name.length < 2) {
     throw new UserError('Name must be at least 2 characters long.');
   }
+  if(Object.keys(user).length > 7) {
+    throw new UserError('Too many object keys.');
+  }
 };
 
 // const validateProduct = (product) => {
