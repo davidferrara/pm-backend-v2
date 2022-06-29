@@ -2,6 +2,8 @@
 const logger = require('../utils/logger');
 const usersRouter = require('express').Router();
 const userSheetService = require('../utils/userSheetService');
+const { User, validateUser } = require('../models/User');
+
 
 // Get all the users
 usersRouter.get('/', async (request, response) => {
@@ -12,39 +14,39 @@ usersRouter.get('/', async (request, response) => {
 
 
 usersRouter.put('/:id', async (request, response) => {
-  const user = request.user;
-  console.log('user:', user);
+  const loggedInUser = request.user;
 
-  if (user.privilages !== 'ADMIN') {
-    logger.info(`User ${user.username} does not have admin privilages.`);
+  if (loggedInUser.privilages !== 'ADMIN') {
+    logger.info(`User ${loggedInUser.username} does not have admin privilages.`);
     return response.status(401).json({ 'error': 'You do not have admin privilages' });
   }
 
   const id = request.params.id;
-  console.log('id:', id);
   const userToChange = await userSheetService.findUserById(id);
-  console.log('userToChange:', userToChange);
+
   if (!userToChange) {
     return response.status(404).json({ 'error': 'User not found' });
   }
-  console.log(request.body);
+
+  //Not allowed to change the user id.
   if (request.body.id) {
     return response.status(400).json({ 'error': 'malformed request' });
   }
+
+  //Only allowed to change user privilages and enabled status if logged in user is ADMIN
   if (request.body.privilages || request.body.enabled) {
-    if (user.privilages !== 'ADMIN') {
-      logger.info(`User ${user.username} does not have admin privilages.`);
+    if (loggedInUser.privilages !== 'ADMIN') {
+      logger.info(`User ${loggedInUser.username} does not have admin privilages.`);
       return response.status(401).json({ 'error': 'You do not have admin privilages' });
     }
   }
 
   const changedUser = Object.assign(userToChange, request.body);
-  console.log('changedUser', changedUser);
+  validateUser(changedUser);
 
-  const updatedUser = await userSheetService.saveUser(changedUser);
+  const updatedUser = await userSheetService.updateUser(changedUser);
 
   response.json(updatedUser);
-  // response.json({ message: 'LOLOLOLOLOL' });
 });
 
 module.exports = usersRouter;

@@ -95,14 +95,16 @@ userSheetService.findUserById = async (id) => {
     spreadsheetId,
     range,
   };
-  const getResponse = (await sheets.spreadsheets.values.get(getRequest)).data.values;
 
-  const users = convertToUserObjects(getResponse);
-  const user = users[0];
+  const getResponse = (await sheets.spreadsheets.values.get(getRequest)).data;
+  const values = getResponse.values[0];
+  const user = decodeUser(values);
+
   return user;
 };
 
 
+// MEH MIGHT DELETE
 userSheetService.findUserByIdAndUpdate = async (id, userChanges) => {
   const { sheets } = await authentication();
 
@@ -139,6 +141,7 @@ userSheetService.findUserByIdAndUpdate = async (id, userChanges) => {
 };
 
 
+// Save a new user to the Users sheet.
 userSheetService.saveUser = async (user) => {
   const { sheets } = await authentication();
 
@@ -196,80 +199,42 @@ userSheetService.saveUser = async (user) => {
   return savedUser;
 };
 
-// Save to the user sheet.
+
+// Update a user in the Users sheet.
 userSheetService.updateUser = async (user) => {
   const { sheets } = await authentication();
 
-  // Check to see if this is a new user or an existing one to be saved.
-  if (user.id) {
-    // User object came with an id so it should exist.
-    // Get the Range of the existing User from the sheet.
-    const searchRequest = {
-      spreadsheetId,
-      requestBody: {
-        dataFilters: [
-          {
-            developerMetadataLookup: {
-              metadataValue: user.id,
-            }
+  // User object came with an id so it should exist.
+  // Get the Range of the existing User from the sheet.
+  const searchRequest = {
+    spreadsheetId,
+    requestBody: {
+      dataFilters: [
+        {
+          developerMetadataLookup: {
+            metadataValue: user.id,
           }
-        ]
-      }
-    };
-
-    const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
-    if (!searchResponse.matchedDeveloperMetadata) {
-      logger.info(`user id: ${user.id} not found.`);
-      return undefined;
+        }
+      ]
     }
+  };
 
-    const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
-    const range = convertRowToRange(row);
-
-    // Validate the user object.
-    validateUser(user);
-
-    // Convert the user object into a 2D array.
-    user = convertToUserArrays([user]);
-
-    // Form the update request
-    const updateRequest = {
-      spreadsheetId,
-      range,
-      valueInputOption: 'RAW',
-      includeValuesInResponse: true,
-      responseValueRenderOption: 'UNFORMATTED_VALUE',
-      resource: {
-        values: user
-      }
-    };
-
-    const updateResponse = (await sheets.spreadsheets.values.update(updateRequest)).data.updatedData;
-    console.log(updateResponse.values);
-
-    // Get the values from the append response and convert it to a user object.
-    const values = updateResponse.values;
-    const savedUser = convertToUserObjects(values);
-
-    // Return the saved user object.
-    return savedUser;
+  const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
+  if (!searchResponse.matchedDeveloperMetadata) {
+    logger.info(`user id: ${user.id} not found.`);
+    return undefined;
   }
 
-  // User object did not come with an id so it doesn't exist.
-  // Create an id for the new user.
-  const id = new ObjectID();
-  user.id = id.toString();
-
-  // Validate the user object.
-  validateUser(user);
+  const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
+  const range = convertRowToRange(row);
 
   // Convert the user object into a 2D array.
-  user = convertToUserArrays([user]);
+  user = encodeUser(user);
 
-  // Form the append request.
-  const appendRequest = {
+  // Form the update request
+  const updateRequest = {
     spreadsheetId,
-    range: 'Users',
+    range,
     valueInputOption: 'RAW',
     includeValuesInResponse: true,
     responseValueRenderOption: 'UNFORMATTED_VALUE',
@@ -278,47 +243,11 @@ userSheetService.updateUser = async (user) => {
     }
   };
 
-  // Get the range from the append response.
-  const appendResponse = (await sheets.spreadsheets.values.append(appendRequest)).data.updates.updatedData;
-  const range = appendResponse.range;
-
-  // Extract the row indec from the range and set the metaData request indexes.
-  const endIndex = convertRangeToRow(range);
-  const startIndex = endIndex - 1;
-  logger.info(`startIndex: ${startIndex}\nendIndex: ${endIndex}`);
+  const updateResponse = (await sheets.spreadsheets.values.update(updateRequest)).data.updatedData;
 
   // Get the values from the append response and convert it to a user object.
-  const values = appendResponse.values;
-  const savedUser = convertToUserObjects(values);
-
-  // Form the metaData request to create an id lookup for the row.
-  const metaDataRequest = {
-    spreadsheetId,
-    requestBody: {
-      requests: [
-        {
-          createDeveloperMetadata: {
-            developerMetadata: {
-              metadataKey: 'id',
-              metadataValue: id,
-              location: {
-                dimensionRange: {
-                  sheetId: userSheetId,
-                  dimension: 'ROWS',
-                  startIndex,
-                  endIndex,
-                }
-              },
-              visibility: 'DOCUMENT',
-            }
-          }
-        }
-      ]
-    },
-  };
-
-  // Send the create metaData request.
-  await sheets.spreadsheets.batchUpdate(metaDataRequest);
+  const values = updateResponse.values[0];
+  const savedUser = decodeUser(values);
 
   // Return the saved user object.
   return savedUser;
