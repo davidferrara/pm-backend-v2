@@ -1,3 +1,8 @@
+GET http://localhost:3001/api/users/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTY1MzIwNDksImV4cCI6MTY1NjU2NDQ0OX0.jdjkN5szpAI_C2EHqHN-oRNgdfWqs7ORYeU1cIJeWzg
+
+###
+
 PUT http://localhost:3001/api/users/62a25ad7c3b83c3d305fe7f2
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTY1MzIwNDksImV4cCI6MTY1NjU2NDQ0OX0.jdjkN5szpAI_C2EHqHN-oRNgdfWqs7ORYeU1cIJeWzg

@@ -1,9 +1,7 @@
-const ObjectID = require('bson').ObjectID;
 const { google } = require('googleapis');
 const config = require('./config');
 const {
   convertToUserObjects,
-  convertToUserArrays,
   convertRangeToRow,
   convertRowToRange,
 } = require('../utils/converter');
@@ -100,43 +98,6 @@ userSheetService.findUserById = async (id) => {
   const values = getResponse.values[0];
   const user = decodeUser(values);
 
-  return user;
-};
-
-
-// MEH MIGHT DELETE
-userSheetService.findUserByIdAndUpdate = async (id, userChanges) => {
-  const { sheets } = await authentication();
-
-  const searchRequest = {
-    spreadsheetId,
-    requestBody: {
-      dataFilters: [
-        {
-          developerMetadataLookup: {
-            metadataValue: id,
-          }
-        }
-      ]
-    }
-  };
-
-  const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
-  if (!searchResponse.matchedDeveloperMetadata) {
-    logger.info(`user id: ${id} not found.`);
-    return undefined;
-  }
-  const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
-  const range = convertRowToRange(row);
-
-  const getRequest = {
-    spreadsheetId,
-    range,
-  };
-  const getResponse = (await sheets.spreadsheets.values.get(getRequest)).data.values;
-
-  const users = convertToUserObjects(getResponse);
-  const user = users[0];
   return user;
 };
 

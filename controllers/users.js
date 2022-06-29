@@ -16,18 +16,6 @@ usersRouter.get('/', async (request, response) => {
 usersRouter.put('/:id', async (request, response) => {
   const loggedInUser = request.user;
 
-  if (loggedInUser.privilages !== 'ADMIN') {
-    logger.info(`User ${loggedInUser.username} does not have admin privilages.`);
-    return response.status(401).json({ 'error': 'You do not have admin privilages' });
-  }
-
-  const id = request.params.id;
-  const userToChange = await userSheetService.findUserById(id);
-
-  if (!userToChange) {
-    return response.status(404).json({ 'error': 'User not found' });
-  }
-
   //Not allowed to change the user id.
   if (request.body.id) {
     return response.status(400).json({ 'error': 'malformed request' });
@@ -39,6 +27,13 @@ usersRouter.put('/:id', async (request, response) => {
       logger.info(`User ${loggedInUser.username} does not have admin privilages.`);
       return response.status(401).json({ 'error': 'You do not have admin privilages' });
     }
+  }
+
+  const id = request.params.id;
+  const userToChange = await userSheetService.findUserById(id);
+
+  if (!userToChange) {
+    return response.status(404).json({ 'error': 'User not found' });
   }
 
   const changedUser = Object.assign(userToChange, request.body);
