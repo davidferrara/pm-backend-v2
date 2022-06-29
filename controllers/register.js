@@ -17,7 +17,7 @@ registerRouter.post('/', async (request, response) => {
   const saltRounds = 10;
   const passwordHash = await bcrypt.hash(password, saltRounds);
 
-  const user = Object.seal(new User(
+  const newUser = Object.seal(new User(
     new ObjectID().toString(),
     username,
     name,
@@ -27,11 +27,10 @@ registerRouter.post('/', async (request, response) => {
     []
   ));
 
-  validateUser(user);
-  console.log(user);
+  validateUser(newUser);
 
-  // const savedUser = await userSheetService.saveUser(user);
-  // response.status(201).json(savedUser);
+  const savedUser = await userSheetService.saveUser(newUser);
+  response.status(201).json(savedUser);
 });
 
 module.exports = registerRouter;

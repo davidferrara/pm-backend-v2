@@ -5,9 +5,9 @@ const {
   convertToUserObjects,
   convertToUserArrays,
   convertRangeToRow,
-  convertRowToRange
-} = require('../models/User.org');
-const { validateUser } = require('./validation');
+  convertRowToRange,
+} = require('../utils/converter');
+const { encodeUser, decodeUser } = require('../models/User');
 const logger = require('./logger');
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
@@ -57,7 +57,6 @@ userSheetService.findUserByUsername = async (username) => {
   };
   const response = (await sheets.spreadsheets.values.get(request)).data.values;
   response.shift(); // Removes the tableheader from the data
-
 
   const users = convertToUserObjects(response);
   const user = users.find(u => u.username === username);
@@ -140,14 +139,11 @@ userSheetService.findUserByIdAndUpdate = async (id, userChanges) => {
 };
 
 
-userSheetService.saveNewUser = async (user) => {
+userSheetService.saveUser = async (user) => {
   const { sheets } = await authentication();
 
-  const id = new ObjectID();
-  user.id = id.toString();
-
-  validateUser(user);
-  user = convertToUserArrays([user]);
+  user = encodeUser(user);
+  console.log('After encoding in userSheetService...', user);
 
   const appendRequest = {
     spreadsheetId,
@@ -167,8 +163,8 @@ userSheetService.saveNewUser = async (user) => {
   const startIndex = endIndex - 1;
   logger.info(`startIndex: ${startIndex}\nendIndex: ${endIndex}`);
 
-  const values = appendResponse.values;
-  const savedUser = convertToUserObjects(values);
+  const values = appendResponse.values[0];
+  const savedUser = decodeUser(values);
 
   const metaDataRequest = {
     spreadsheetId,
@@ -179,7 +175,7 @@ userSheetService.saveNewUser = async (user) => {
           createDeveloperMetadata: {
             developerMetadata: {
               metadataKey: 'id',
-              metadataValue: id,
+              metadataValue: savedUser.id,
               location: {
                 dimensionRange: {
                   sheetId: userSheetId,
@@ -201,7 +197,7 @@ userSheetService.saveNewUser = async (user) => {
 };
 
 // Save to the user sheet.
-userSheetService.saveUser = async (user) => {
+userSheetService.updateUser = async (user) => {
   const { sheets } = await authentication();
 
   // Check to see if this is a new user or an existing one to be saved.
