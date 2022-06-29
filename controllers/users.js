@@ -2,7 +2,7 @@
 const logger = require('../utils/logger');
 const usersRouter = require('express').Router();
 const userSheetService = require('../utils/userSheetService');
-const { User, validateUser } = require('../models/User');
+const { validateUser } = require('../models/User');
 
 
 // Get all the users

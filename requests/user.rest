@@ -15,3 +15,23 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1c
   "username": "MoneyMonger",
   "enabled": false
 }
+
+###
+PUT http://localhost:3001/api/users/62a25adec3b83c3d305fe7f4
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTY1MzIwNDksImV4cCI6MTY1NjU2NDQ0OX0.jdjkN5szpAI_C2EHqHN-oRNgdfWqs7ORYeU1cIJeWzg
+
+{
+  "enabled": true,
+  "name": "Sheldon Plankton"
+}
+
+###
+PUT http://localhost:3001/api/users/62a25adec3b83c3d305fe7f4
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTY1MzIwNDksImV4cCI6MTY1NjU2NDQ0OX0.jdjkN5szpAI_C2EHqHN-oRNgdfWqs7ORYeU1cIJeWzg
+
+{
+  "enabled": false,
+  "name": "Sheldon Plankton"
+}
