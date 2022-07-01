@@ -1,4 +1,4 @@
-const { UserError: ProductError } = require('../utils/errors');
+const { ProductError } = require('../utils/errors');
 
 function Product(id, postId, client, reason, condition, conditionNotes, asin, expirationDate, quantity, location, dateCreated, dateModified, masterSku, user) {
   if (typeof id === 'string') {

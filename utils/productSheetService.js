@@ -30,7 +30,7 @@ const authentication = async () => {
 
 
 // Returns all users.
-productSheetService.getAllUsers = async () => {
+productSheetService.getAllProducts = async () => {
   const { sheets } = await authentication();
   const request = {
     spreadsheetId,
@@ -40,7 +40,7 @@ productSheetService.getAllUsers = async () => {
   response.shift(); // Removes the tableheader from the data
 
 
-  const products = convertToUserObjects(response);
+  const products = convertToProductObjects(response);
 
   return products;
 };
