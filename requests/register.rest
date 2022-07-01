@@ -47,3 +47,13 @@ Content-Type: application/json
   "name": "Sandy Cheeks",
   "password": "Science"
 }
+
+###
+POST http://localhost:3001/api/register
+Content-Type: application/json
+
+{
+  "username": "T",
+  "name": "S",
+  "password": "Science"
+}

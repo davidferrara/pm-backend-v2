@@ -1,4 +1,5 @@
-const UserError = require('../errors/user_error');
+// const UserError = require('../errors/user_error');
+const { UserError } = require('../utils/errors');
 
 function User(id, username, name, passwordHash, enabled, privilages, products) {
   if (typeof id === 'string') {
