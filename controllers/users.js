@@ -12,7 +12,7 @@ usersRouter.get('/', async (request, response) => {
   response.json(users);
 });
 
-
+// Update a user.
 usersRouter.put('/:id', async (request, response) => {
   const loggedInUser = request.user;
 
