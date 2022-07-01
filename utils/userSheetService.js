@@ -87,7 +87,7 @@ userSheetService.findUserById = async (id) => {
   }
 
   const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
-  const range = convertRowToRange(row);
+  const range = convertRowToRange(row, 'Users');
 
   const getRequest = {
     spreadsheetId,
@@ -187,7 +187,7 @@ userSheetService.updateUser = async (user) => {
   }
 
   const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
-  const range = convertRowToRange(row);
+  const range = convertRowToRange(row, 'Users');
 
   // Convert the user object into a 2D array.
   user = encodeUser(user);

@@ -1,0 +1,13 @@
+POST http://localhost:3001/api/products
+Content-Type: application/json
+
+{
+  "client": "ANJ",
+  "reason": "Barred Limitation",
+  "condition": "Used Like New",
+  "conditionNotes": "Scratch on the screen.",
+  "asin": "B07CS3JGPC",
+  "expirationDate": "",
+  "quantity": "2",
+  "location": "OS-02"
+}

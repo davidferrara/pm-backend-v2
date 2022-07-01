@@ -1,8 +1,9 @@
 const productsRouter = require('express').Router();
-// const Product = require('../models/product');
-const logger = require('../utils/logger');
+const productSheetService = require('../utils/productSheetService');
+const ObjectID = require('bson').ObjectID;
+const { Product, validateProduct } = require('../models/Product');
 
-const generateId = () => {
+const generatePostId = () => {
   let s = '', r = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
   for (let i = 0; i < 6; i++) {
@@ -21,35 +22,44 @@ productsRouter.get('/', async (request, response) => {
 
 // Create a new product
 productsRouter.post('/', async (request, response) => {
-  // const body = request.body;
-  // const user = request.user;
+  const loggedInUser = request.user;
+  const { client,
+    reason,
+    condition,
+    conditionNotes,
+    asin,
+    expirationDate,
+    quantity,
+    location } = request.body;
 
-  // let newId = generateId();
-  // let existingId = await Product.findOne({ postId: newId });
-  // while (existingId !== null) {
-  //   newId = generateId();
-  //   existingId = await Product.findOne({ postId: newId });
-  // }
+  const id = new ObjectID();
+  let postId = generatePostId();
+  let existingId = await productSheetService.findProductByPostId(postId);
+  while (existingId !== null) {
+    postId = generatePostId();
+    existingId = await productSheetService.findProductByPostId(postId);
+  }
 
-  // const product = new Product({
-  //   postId: newId,
-  //   client: body.client,
-  //   reason: body.reason,
-  //   condition: body.condition,
-  //   conditionNote: body.conditionNote,
-  //   asin: body.asin,
-  //   expiration: body.expiration,
-  //   quantity: body.quantity,
-  //   location: body.location,
-  //   dateCreated: new Date(),
-  //   user: user._id,
-  // });
+  const newProduct = Object.seal(new Product(
+    id.toString(),
+    postId,
+    client,
+    reason,
+    condition,
+    conditionNotes,
+    asin,
+    expirationDate,
+    quantity,
+    location,
+    id.getTimestamp(),  // Date Created
+    id.getTimestamp(),  // Date Modified
+    loggedInUser.id
+  ));
 
-  // const savedProduct = await product.save();
-  // user.products = user.products.concat(savedProduct._id);
-  // await user.save();
-  // response.status(201).json(savedProduct);
-  response.json({ message: 'create product enpoint' });
+  validateProduct(newProduct);
+
+  const savedUser = await productSheetService.saveProduct(newProduct);
+  response.status(201).json(savedUser);
 });
 
 // Update a product

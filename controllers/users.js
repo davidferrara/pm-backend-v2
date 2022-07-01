@@ -1,4 +1,3 @@
-// const bcrypt = require('bcrypt');
 const logger = require('../utils/logger');
 const usersRouter = require('express').Router();
 const userSheetService = require('../utils/userSheetService');
