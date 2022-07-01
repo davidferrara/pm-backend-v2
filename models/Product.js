@@ -86,14 +86,17 @@ function Product(id, postId, client, reason, condition, conditionNotes, asin, ex
   }
 }
 
-const validateProduct = (user) => {
-  if (user.username.length < 3) {
-    throw new ProductError('Username must be at least 3 characters long.');
+
+const validateProduct = (product) => {
+  if (product.location.length < 2) {
+    throw new ProductError('location must be at least 2 characters long.');
   }
-  if (user.name.length < 2) {
-    throw new ProductError('Name must be at least 2 characters long.');
+
+  if (product.user === '') {
+    throw new ProductError('User must exist.');
   }
-  if (Object.keys(user).length > 7) {
+
+  if (Object.keys(product).length > 14) {
     throw new ProductError('Too many object keys.');
   }
 };
@@ -109,10 +112,6 @@ const validateProduct = (user) => {
  */
 const encodeProduct = (productObject) => {
   const result = [Object.values(productObject)];
-  result[0][6] = result[0][6].join(',');
-  if (result[0][6] === '') {
-    result[0][6] = 'none';
-  }
 
   return result;
 };
@@ -123,40 +122,27 @@ const encodeProduct = (productObject) => {
  *
  * Takes an array and converts it into productValues.
  *
- * @param {Array} productValues The user array to be converted.
- * @returns An user Object.
+ * @param {Array} productValues The product array to be converted.
+ * @returns An product Object.
  */
 const decodeProduct = (productValues) => {
-  if (productValues[6] === 'none') {
-    productValues[6] = [];
-  } else {
-    productValues[6] = productValues[6].split(',');
-  }
-
   const result = Object.seal(new Product(
     productValues[0],
     productValues[1],
     productValues[2],
     productValues[3],
-    convertToBoolean(productValues[4]),
     productValues[5],
-    productValues[6]
+    productValues[6],
+    productValues[7],
+    productValues[8],
+    productValues[9],
+    productValues[10],
+    productValues[11],
+    productValues[12],
+    productValues[13]
   ));
 
   return result;
-};
-
-
-/**
- * convertToBoolean
- *
- * Takes a string 'TRUE' or 'FALSE' and convertes it to a boolean type.
- * @param {String} str The string to be converted to a boolean type.
- * @returns true or false.
- */
-const convertToBoolean = (str) => {
-  const istrueset = (str === 'TRUE');
-  return istrueset;
 };
 
 
