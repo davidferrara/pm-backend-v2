@@ -2,6 +2,7 @@ const productsRouter = require('express').Router();
 const productSheetService = require('../utils/productSheetService');
 const ObjectID = require('bson').ObjectID;
 const { Product, validateProduct } = require('../models/Product');
+const userSheetService = require('../utils/userSheetService');
 
 const generatePostId = () => {
   let s = '', r = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -13,16 +14,23 @@ const generatePostId = () => {
   return s;
 };
 
-// Get all the products
+// Get all the products per user
 productsRouter.get('/', async (request, response) => {
-  // const allProducts = await Product.find({});
-  // response.json(allProducts);
-  response.json({ message: 'get all products enpoint' });
+  const loggedInUser = request.user;
+
+  const products = await productSheetService.findProductsByUser(loggedInUser);
+
+  response.json(products);
 });
 
 // Create a new product
 productsRouter.post('/', async (request, response) => {
   const loggedInUser = request.user;
+
+  if(loggedInUser.enabled === false) {
+    return response.status(401).json({ 'error': 'You are not enabled' });
+  }
+
   const { client,
     reason,
     condition,
@@ -35,7 +43,7 @@ productsRouter.post('/', async (request, response) => {
   const id = new ObjectID();
   let postId = generatePostId();
   let existingId = await productSheetService.findProductByPostId(postId);
-  while (existingId !== null) {
+  while (existingId !== undefined) {
     postId = generatePostId();
     existingId = await productSheetService.findProductByPostId(postId);
   }
@@ -51,15 +59,23 @@ productsRouter.post('/', async (request, response) => {
     expirationDate,
     quantity,
     location,
-    id.getTimestamp(),  // Date Created
-    id.getTimestamp(),  // Date Modified
+    id.getTimestamp().toISOString(),  // Date Created
+    id.getTimestamp().toISOString(),  // Date Modified
+    '',
     loggedInUser.id
   ));
 
   validateProduct(newProduct);
 
-  const savedUser = await productSheetService.saveProduct(newProduct);
-  response.status(201).json(savedUser);
+  const savedProduct = await productSheetService.saveProduct(newProduct);
+
+  const userProducts = loggedInUser.products;
+  userProducts.push(savedProduct.id);
+  loggedInUser.products = userProducts;
+
+  await userSheetService.updateUser(loggedInUser);
+
+  response.status(201).json(savedProduct);
 });
 
 // Update a product

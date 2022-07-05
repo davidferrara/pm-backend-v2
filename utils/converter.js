@@ -56,11 +56,11 @@ const convertToProductObjects = (array) => {
 const convertRangeToRow = (range) => parseInt(range.match(/\d+/));
 
 // Returns the Range from a row index.
-const convertRowToRange = (row, sheet) => {
-  if (sheet === 'Users') {
+const convertRowToRange = (row, sheetName) => {
+  if (sheetName === 'Users') {
     return `Users!A${row}:G${row}`;
   }
-  if (sheet === 'Products') {
+  if (sheetName === 'Products') {
     return `Products!A${row}:N${row}`;
   }
 };

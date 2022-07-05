@@ -29,97 +29,121 @@ const authentication = async () => {
 };
 
 
-// Returns all users.
-productSheetService.getAllProducts = async () => {
+// Returns a user or undefined if not found.  SINGLE PRODUCT
+productSheetService.findProductById = async (id) => {
   const { sheets } = await authentication();
+
+  const searchRequest = {
+    spreadsheetId,
+    requestBody: {
+      dataFilters: [
+        {
+          developerMetadataLookup: {
+            metadataValue: id,
+          }
+        }
+      ]
+    }
+  };
+
+  const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
+  if (!searchResponse.matchedDeveloperMetadata) {
+    logger.info(`product id: ${id} not found.`);
+    return undefined;
+  }
+
+  const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
+  const range = convertRowToRange(row, 'Products');
+
+  const getRequest = {
+    spreadsheetId,
+    range,
+  };
+
+  const getResponse = (await sheets.spreadsheets.values.get(getRequest)).data;
+  const values = getResponse.values[0];
+  const product = decodeProduct(values);
+
+  return product;
+};
+
+
+// Returns a user or undefined if not found.  SINGLE PRODUCT
+productSheetService.findProductByPostId = async (postId) => {
+  const { sheets } = await authentication();
+
+  const searchRequest = {
+    spreadsheetId,
+    requestBody: {
+      dataFilters: [
+        {
+          developerMetadataLookup: {
+            metadataValue: postId,
+          }
+        }
+      ]
+    }
+  };
+
+  const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
+  if (!searchResponse.matchedDeveloperMetadata) {
+    logger.info(`product postId: ${postId} not found.`);
+    return undefined;
+  }
+
+  const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
+  const range = convertRowToRange(row, 'Products');
+
+  const getRequest = {
+    spreadsheetId,
+    range,
+  };
+
+  const getResponse = (await sheets.spreadsheets.values.get(getRequest)).data;
+  const values = getResponse.values[0];
+  const product = decodeProduct(values);
+
+  return product;
+};
+
+
+// Returns products or undefined if not found.  MULTIPLE PRODUCTS
+productSheetService.findProductsByUser = async (user) => {
+  const { sheets } = await authentication();
+
   const request = {
     spreadsheetId,
-    range: 'Products'
+    requestBody: {
+      dataFilters: [
+        {
+          developerMetadataLookup: {
+            metadataKey: 'user',
+            metadataValue: user.id,
+          }
+        }
+      ]
+    }
   };
-  const response = (await sheets.spreadsheets.values.get(request)).data.values;
-  response.shift(); // Removes the tableheader from the data
 
+  const response = await sheets.spreadsheets.values.batchGetByDataFilter(request);
+  const valueRanges = response.data.valueRanges;
 
-  const products = convertToProductObjects(response);
+  if(!valueRanges) {
+    logger.info(`products for user.id: ${user.id} not found.`);
+    return undefined;
+  }
+
+  const products = []; // Array of product objects
+  for (let i = 0; i < valueRanges.length; i++) {
+    const values = valueRanges[i].valueRange.values[0];
+    products.push(decodeProduct(values));
+  }
 
   return products;
 };
 
 
-// Returns a user or undefined if not found.
-productSheetService.findProductById = async (id) => {
-  // const { sheets } = await authentication();
-
-  // const searchRequest = {
-  //   spreadsheetId,
-  //   requestBody: {
-  //     dataFilters: [
-  //       {
-  //         developerMetadataLookup: {
-  //           metadataValue: id,
-  //         }
-  //       }
-  //     ]
-  //   }
-  // };
-
-  // const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
-  // if (!searchResponse.matchedDeveloperMetadata) {
-  //   logger.info(`user id: ${id} not found.`);
-  //   return undefined;
-  // }
-
-  // const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
-  // const range = convertRowToRange(row);
-
-  // const getRequest = {
-  //   spreadsheetId,
-  //   range,
-  // };
-
-  // const getResponse = (await sheets.spreadsheets.values.get(getRequest)).data;
-  // const values = getResponse.values[0];
-  // const user = decodeUser(values);
-
-  // return user;
-};
-
-
-// Returns a user or undefined if not found.
-productSheetService.findProductByPostId = async (postId) => {
-  // const { sheets } = await authentication();
-  // const request = {
-  //   spreadsheetId,
-  //   range: 'Users'
-  // };
-  // const response = (await sheets.spreadsheets.values.get(request)).data.values;
-  // response.shift(); // Removes the tableheader from the data
-
-  // const users = convertToUserObjects(response);
-  // const user = users.find(u => u.username === username);
-
-  // return user;
-};
-
-
-// Returns a user or undefined if not found.
-productSheetService.findProductByUser = async (user) => {
-  // const { sheets } = await authentication();
-  // const request = {
-  //   spreadsheetId,
-  //   range: 'Users'
-  // };
-  // const response = (await sheets.spreadsheets.values.get(request)).data.values;
-  // response.shift(); // Removes the tableheader from the data
-
-  // const users = convertToUserObjects(response);
-  // const user = users.find(u => u.username === username);
-
-  // return user;
-};
-
-
-// Save a new user to the Users sheet.
+// Save a new user to the Users sheet.  SINGLE PRODUCT
 productSheetService.saveProduct = async (product) => {
   const { sheets } = await authentication();
 
@@ -211,7 +235,7 @@ productSheetService.saveProduct = async (product) => {
 };
 
 
-// Update a user in the Users sheet.
+// Update a user in the Users sheet.  SINGLE PRODUCT
 productSheetService.updateProduct = async (user) => {
   const { sheets } = await authentication();
 

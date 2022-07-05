@@ -1,5 +1,6 @@
 POST http://localhost:3001/api/products
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTcwNDkyMjAsImV4cCI6MTY1NzA4MTYyMH0.aU6AUZmYfwSM9TyNTd34bTqndqnj5rEfVmLipo_MOOM
 
 {
   "client": "ANJ",
@@ -8,6 +9,63 @@ Content-Type: application/json
   "conditionNotes": "Scratch on the screen.",
   "asin": "B07CS3JGPC",
   "expirationDate": "",
-  "quantity": "2",
+  "quantity": 2,
   "location": "OS-02"
 }
+
+###
+
+POST http://localhost:3001/api/products
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTcwNDkyMjAsImV4cCI6MTY1NzA4MTYyMH0.aU6AUZmYfwSM9TyNTd34bTqndqnj5rEfVmLipo_MOOM
+
+{
+  "client": "SMK",
+  "reason": "Barred Limitation",
+  "condition": "Used Very Good",
+  "conditionNotes": "",
+  "asin": "B0D48205FS",
+  "expirationDate": "",
+  "quantity": 4,
+  "location": "DMF-01"
+}
+
+###
+
+POST http://localhost:3001/api/products
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTcwNDkyMjAsImV4cCI6MTY1NzA4MTYyMH0.aU6AUZmYfwSM9TyNTd34bTqndqnj5rEfVmLipo_MOOM
+
+{
+  "client": "LOL",
+  "reason": "Barred Limitation",
+  "condition": "Open Box",
+  "conditionNotes": "Repackaged",
+  "asin": "B07F9JK730",
+  "expirationDate": "",
+  "quantity": 1,
+  "location": "DMF-02"
+}
+
+###
+
+POST http://localhost:3001/api/products
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTcwNDkyMjAsImV4cCI6MTY1NzA4MTYyMH0.aU6AUZmYfwSM9TyNTd34bTqndqnj5rEfVmLipo_MOOM
+
+{
+  "client": "SUP",
+  "reason": "Barred Limitation",
+  "condition": "New",
+  "conditionNotes": "",
+  "asin": "B07F9JK730",
+  "expirationDate": "",
+  "quantity": 20,
+  "location": "OS-25"
+}
+
+###
+
+GET http://localhost:3001/api/products
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTcwNDkyMjAsImV4cCI6MTY1NzA4MTYyMH0.aU6AUZmYfwSM9TyNTd34bTqndqnj5rEfVmLipo_MOOM
