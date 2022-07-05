@@ -189,9 +189,3 @@ const deleteMetaData = async () => {
   const response = await sheets.spreadsheets.batchUpdate(request);
   console.log(response);
 };
-
-// saveNewUser();
-// getMetaData('62a10353dec79703a422e39d');
-// getMetaData2();
-// deleteMetaData();
-getUserByID('62a25adac3b83c3d305fe7f3');

@@ -46,7 +46,7 @@ userSheetService.getAllUsers = async () => {
 };
 
 
-// Returns a user or undefined if not found.
+// Returns a user or undefined if not found.  MULTIPLE USERS
 userSheetService.findUserByUsername = async (username) => {
   const { sheets } = await authentication();
   const request = {
@@ -63,7 +63,7 @@ userSheetService.findUserByUsername = async (username) => {
 };
 
 
-// Returns a user or undefined if not found.
+// Returns a user or undefined if not found.  SINGLE USER
 userSheetService.findUserById = async (id) => {
   const { sheets } = await authentication();
 
@@ -102,7 +102,7 @@ userSheetService.findUserById = async (id) => {
 };
 
 
-// Save a new user to the Users sheet.
+// Save a new user to the Users sheet.  SINGLE USER
 userSheetService.saveUser = async (user) => {
   const { sheets } = await authentication();
 
@@ -161,7 +161,7 @@ userSheetService.saveUser = async (user) => {
 };
 
 
-// Update a user in the Users sheet.
+// Update a user in the Users sheet.  SINGLE USER
 userSheetService.updateUser = async (user) => {
   const { sheets } = await authentication();
 
