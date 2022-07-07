@@ -2,7 +2,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const loginRouter = require('express').Router();
-const userSheetService = require('../utils/userSheetService');
+const userSheetServiceV2 = require('../utils/userSheetServiceV2');
 const ObjectID = require('bson').ObjectID;
 const { User, validateUser } = require('../models/User');
 
@@ -38,7 +38,7 @@ loginRouter.post('/', async (request, response) => {
 loginRouter.post('/sign-up', async (request, response) => {
   const { username, name, password } = request.body;
 
-  const existingUser = await userSheetService.findUserByUsername(username);
+  const existingUser = await userSheetServiceV2.findUserByUsername(username);
   if (existingUser) {
     return response.status(400).json({ error: 'Username already exists.' });
   }
@@ -58,8 +58,8 @@ loginRouter.post('/sign-up', async (request, response) => {
 
   validateUser(newUser);
 
-  const savedUser = await userSheetService.saveUser(newUser);
-  response.status(201).json(savedUser);
+  const savedUser = await userSheetServiceV2.saveUser(newUser);
+  response.status(201);
 });
 
 

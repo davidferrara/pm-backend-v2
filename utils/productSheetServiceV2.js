@@ -1,48 +1,58 @@
-const { google } = require('googleapis');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
 const config = require('./config');
-const {
-  convertToProductObjects,
-  convertRangeToRow,
-  convertRowToRange,
-} = require('./converter');
-const { encodeProduct, decodeProduct } = require('../models/Product');
+const { Product, encodeProduct, decodeProduct } = require('../models/Product');
 const logger = require('./logger');
 
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
-const spreadsheetId = config.SPREADSHEET_ID;
-const productSheetId = config.PRODUCT_SHEET_ID;
-const productSheetService = this;
+const SPREADSHEET_ID = config.SPREADSHEET_ID;
+const PRODUCT_SHEET_ID = config.PRODUCT_SHEET_ID;
+const productSheetServiceV2 = this;
 
+const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
 
 const authentication = async () => {
-  const auth = new google.auth.GoogleAuth({
-    scopes: SCOPES
+  await doc.useServiceAccountAuth({
+    client_email: config.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    private_key: config.GOOGLE_PRIVATE_KEY,
   });
 
-  const authClient = await auth.getClient();
-  const sheets = google.sheets({
-    version: 'v4',
-    auth: authClient
-  });
-
-  return { sheets };
+  await doc.loadInfo();
 };
 
 
-productSheetService.test = async () => {
-  const { sheets } = await authentication();
+productSheetServiceV2.test = async () => {
+  await authentication();
 
-  const request = {
-    spreadsheetId: '1M9liIYbgj3s_zhMz-lLnB5ps-4wPSNH193Of3aJifQA',
-    range: 'Copy of Products!A2:A'
-  };
-  const response = (await sheets.spreadsheets.values.get(request)).data;
-  console.log(response);
+  const productSheet = await doc.sheetsById[PRODUCT_SHEET_ID];
+
+  const rows = await productSheet.getRows();
+  console.log(rows.length);
+
+  const newProduct = Object.seal(new Product(
+    'ABCDEF',
+    '0123345',
+    'ANJ',
+    'Barred Limitation',
+    'New',
+    '',
+    'B07BS87FSG3',
+    '',
+    6,
+    'IDK',
+    'Yesterday',  // Date Created
+    'Today',  // Date Modified
+    '',
+    'ME LOL'
+  ));
+
+  const newRow = await productSheet.addRow(newProduct);
+
+
+  return newRow;
 };
 
 
 // Returns a user or undefined if not found.  SINGLE PRODUCT
-productSheetService.findProductById = async (id) => {
+productSheetServiceV2.findProductById = async (id) => {
   const { sheets } = await authentication();
 
   const searchRequest = {
@@ -81,7 +91,7 @@ productSheetService.findProductById = async (id) => {
 
 
 // Returns a user or undefined if not found.  SINGLE PRODUCT
-productSheetService.findProductByPostId = async (postId) => {
+productSheetServiceV2.findProductByPostId = async (postId) => {
   const { sheets } = await authentication();
 
   const searchRequest = {
@@ -120,7 +130,7 @@ productSheetService.findProductByPostId = async (postId) => {
 
 
 // Returns products or undefined if not found.  MULTIPLE PRODUCTS
-productSheetService.findProductsByUser = async (user) => {
+productSheetServiceV2.findProductsByUser = async (user) => {
   const { sheets } = await authentication();
 
   const request = {
@@ -140,7 +150,7 @@ productSheetService.findProductsByUser = async (user) => {
   const response = await sheets.spreadsheets.values.batchGetByDataFilter(request);
   const valueRanges = response.data.valueRanges;
 
-  if(!valueRanges) {
+  if (!valueRanges) {
     logger.info(`products for user.id: ${user.id} not found.`);
     return undefined;
   }
@@ -156,7 +166,7 @@ productSheetService.findProductsByUser = async (user) => {
 
 
 // Save a new user to the Users sheet.  SINGLE PRODUCT
-productSheetService.saveProduct = async (product) => {
+productSheetServiceV2.saveProduct = async (product) => {
   const { sheets } = await authentication();
 
   product = encodeProduct(product);
@@ -248,7 +258,7 @@ productSheetService.saveProduct = async (product) => {
 
 
 // Update a user in the Users sheet.  SINGLE PRODUCT
-productSheetService.updateProduct = async (user) => {
+productSheetServiceV2.updateProduct = async (user) => {
   const { sheets } = await authentication();
 
   // User object came with an id so it should exist.
@@ -300,4 +310,4 @@ productSheetService.updateProduct = async (user) => {
   return savedUser;
 };
 
-module.exports = productSheetService;
+module.exports = productSheetServiceV2;

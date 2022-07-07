@@ -14,6 +14,7 @@ const generatePostId = () => {
   return s;
 };
 
+
 // Get all the products per user
 productsRouter.get('/', async (request, response) => {
   const loggedInUser = request.user;
@@ -22,6 +23,7 @@ productsRouter.get('/', async (request, response) => {
 
   response.json(products);
 });
+
 
 // Create a new product
 productsRouter.post('/', async (request, response) => {
