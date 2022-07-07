@@ -59,7 +59,7 @@ loginRouter.post('/sign-up', async (request, response) => {
   validateUser(newUser);
 
   const savedUser = await userSheetServiceV2.saveUser(newUser);
-  response.status(201);
+  response.status(201).json(savedUser);
 });
 
 

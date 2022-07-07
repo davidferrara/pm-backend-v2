@@ -1,3 +1,75 @@
+POST http://localhost:3001/api/login/sign-up
+Content-Type: application/json
+
+{
+  "username": "SuperSponge123",
+  "name": "SpongeBob Squarepants",
+  "password": "gary"
+}
+
+###
+
+POST http://localhost:3001/api/login/sign-up
+Content-Type: application/json
+
+{
+  "username": "MoneyMonger",
+  "name": "Eugene Krabs ",
+  "password": "ilovemoney"
+}
+
+###
+POST http://localhost:3001/api/login/sign-up
+Content-Type: application/json
+
+{
+  "username": "PatBack789",
+  "name": "Patrick Star",
+  "password": "uhhhhhhh"
+}
+
+###
+POST http://localhost:3001/api/login/sign-up
+Content-Type: application/json
+
+{
+  "username": "UltimateRuler",
+  "name": "Sheldon Plankton",
+  "password": "chum"
+}
+
+###
+POST http://localhost:3001/api/login/sign-up
+Content-Type: application/json
+
+{
+  "username": "TexasIsNumber1",
+  "name": "Sandy Cheeks",
+  "password": "Science"
+}
+
+###
+POST http://localhost:3001/api/login/sign-up
+Content-Type: application/json
+
+{
+  "username": "BuffLobster12",
+  "name": "Larry Lobster",
+  "password": "IlifetWeigHTs"
+}
+
+###
+POST http://localhost:3001/api/login/sign-up
+Content-Type: application/json
+
+{
+  "username": "T",
+  "name": "S",
+  "password": "Science"
+}
+
+###
+
 POST http://localhost:3001/api/login
 Content-Type: application/json
 
@@ -13,24 +85,4 @@ Content-Type: application/json
 {
   "username": "JohnDoe123",
   "password": "LMAO"
-}
-
-###
-POST http://localhost:3001/api/login/sign-up
-Content-Type: application/json
-
-{
-  "username": "T",
-  "name": "S",
-  "password": "Science"
-}
-
-###
-POST http://localhost:3001/api/login/sign-up
-Content-Type: application/json
-
-{
-  "username": "BuffLobster12",
-  "name": "Larry Lobster",
-  "password": "IlifetWeigHTs"
 }

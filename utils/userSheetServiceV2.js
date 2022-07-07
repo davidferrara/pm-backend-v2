@@ -1,7 +1,10 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
+const axios = require('axios');
+const csvParse = require('csv-parse');
 const config = require('./config');
 const logger = require('./logger');
-const { User, encodeUserV2, encodeUser, decodeUser } = require('../models/User');
+const { User, encodeUser, decodeUser } = require('../models/User');
+
 
 const SPREADSHEET_ID = config.SPREADSHEET_ID;
 const USER_SHEET_ID = config.USER_SHEET_ID;
@@ -44,14 +47,23 @@ userSheetServiceV2.getAllUsers = async () => {
 
 // Returns a user or undefined if not found.  MULTIPLE USERS
 userSheetServiceV2.findUserByUsername = async (username) => {
-  // await authentication();
-  // await doc.loadInfo();
+  await authentication();
+  await doc.loadInfo();
+  const query = `select * where B='${username}'`;
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid=${USER_SHEET_ID}&tq=${encodeURI(query)}`;
+  const options = {
+    method: 'GET',
+    headers: { authorization: `Bearer ${doc.jwtClient.credentials.access_token}` }
+  };
 
   // const response = (await sheets.spreadsheets.values.get(request)).data.values;
   // response.shift(); // Removes the tableheader from the data
 
   // const users = convertToUserObjects(response);
   // const user = users.find(u => u.username === username);
+  const result = await axios.get(url, options);
+  console.log(result);
+  if (result !== '') csvParse(result, {}, (err, ar) => console.log(ar));
 
   return undefined;
 };
@@ -103,67 +115,12 @@ userSheetServiceV2.saveUser = async (user) => {
 
   const userSheet = doc.sheetsById[USER_SHEET_ID];
 
-  console.log(user);
   user = encodeUser(user);
-  console.log(user);
-
 
   const savedRow = await userSheet.addRow(user, { raw: true, insert: true });
+
   const savedUser = decodeUser(savedRow);
-  console.log('savedUser', savedUser);
 
-
-  // user = encodeUser(user);
-  // console.log('After encoding in userSheetService...', user);
-
-  // const appendRequest = {
-  //   spreadsheetId,
-  //   range: 'Users',
-  //   valueInputOption: 'RAW',
-  //   includeValuesInResponse: true,
-  //   responseValueRenderOption: 'UNFORMATTED_VALUE',
-  //   resource: {
-  //     values: user
-  //   }
-  // };
-
-  // const appendResponse = (await sheets.spreadsheets.values.append(appendRequest)).data.updates.updatedData;
-  // const range = appendResponse.range;
-
-  // const endIndex = convertRangeToRow(range);
-  // const startIndex = endIndex - 1;
-  // logger.info(`startIndex: ${startIndex}\nendIndex: ${endIndex}`);
-
-  // const values = appendResponse.values[0];
-  // const savedUser = decodeUser(values);
-
-  // const metaDataRequest = {
-  //   spreadsheetId,
-  //   // requestBody must be key:value pairs
-  //   requestBody: {
-  //     requests: [
-  //       {
-  //         createDeveloperMetadata: {
-  //           developerMetadata: {
-  //             metadataKey: 'id',
-  //             metadataValue: savedUser.id,
-  //             location: {
-  //               dimensionRange: {
-  //                 sheetId: userSheetId,
-  //                 dimension: 'ROWS',
-  //                 startIndex,
-  //                 endIndex,
-  //               }
-  //             },
-  //             visibility: 'DOCUMENT',
-  //           }
-  //         }
-  //       }
-  //     ]
-  //   },
-  // };
-
-  // await sheets.spreadsheets.batchUpdate(metaDataRequest);
   return savedUser;
 };
 

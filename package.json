@@ -17,10 +17,12 @@
   "author": "David Ferrara",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.27.2",
     "bcrypt": "^5.0.1",
     "bson": "^4.6.4",
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
+    "csv-parse": "^5.2.2",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
     "express-async-errors": "^3.1.1",
