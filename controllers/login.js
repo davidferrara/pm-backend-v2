@@ -1,8 +1,9 @@
 /* eslint-disable no-undef */
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const config = require('../utils/config');
 const loginRouter = require('express').Router();
-const userSheetServiceV2 = require('../utils/userSheetServiceV2');
+const userSheetService = require('../utils/userSheetService');
 const ObjectID = require('bson').ObjectID;
 const { User, validateUser } = require('../models/User');
 
@@ -10,7 +11,7 @@ const { User, validateUser } = require('../models/User');
 loginRouter.post('/', async (request, response) => {
   const { username, password } = request.body;
 
-  const user = await userSheetService.findUserByUsername(username);
+  const user = (await userSheetService.findUsers(username, 'username'))[0];
   const passwordCorrect = user === undefined
     ? false
     : await bcrypt.compare(password, user.passwordHash);
@@ -26,7 +27,7 @@ loginRouter.post('/', async (request, response) => {
     id: user.id,
   };
 
-  const token = jwt.sign(userForToken, process.env.SECRET, { expiresIn: '9h' });
+  const token = jwt.sign(userForToken, config.SECRET, { expiresIn: '9h' });
 
   response
     .status(200)
@@ -38,9 +39,12 @@ loginRouter.post('/', async (request, response) => {
 loginRouter.post('/sign-up', async (request, response) => {
   const { username, name, password } = request.body;
 
-  const existingUser = await userSheetServiceV2.findUserByUsername(username);
+  const existingUser = await userSheetService.findUsers(username, 'username');
   if (existingUser) {
     return response.status(400).json({ error: 'Username already exists.' });
+  }
+  if (existingUser === -1) {
+    return response.status(500);
   }
 
   const saltRounds = 10;
@@ -58,7 +62,7 @@ loginRouter.post('/sign-up', async (request, response) => {
 
   validateUser(newUser);
 
-  const savedUser = await userSheetServiceV2.saveUser(newUser);
+  const savedUser = await userSheetService.saveUser(newUser);
   response.status(201).json(savedUser);
 });
 

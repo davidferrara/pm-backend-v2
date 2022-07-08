@@ -77,14 +77,14 @@ const encodeUser = (userObject) => {
 
 
 /**
- * decodeUser
+ * decodeRowUser
  *
  * Takes a GoogleSpreadsheetRow and converts it into a user object.
  *
  * @param {GoogleSpreadsheetRow} rowObject The GoogleSpreadsheetRow to be converted.
  * @returns A user Object.
  */
-const decodeUser = (rowObject) => {
+const decodeRowUser = (rowObject) => {
   if (rowObject.products === 'none') {
     rowObject.products = [];
   } else {
@@ -99,6 +99,35 @@ const decodeUser = (rowObject) => {
     convertToBoolean(rowObject.enabled),
     rowObject.privilages,
     rowObject.products
+  ));
+
+  return result;
+};
+
+
+/**
+ * decodeQueryUser
+ *
+ * Takes a query result and converts it into a user object.
+ *
+ * @param {Array} userValues The GoogleSpreadsheetRow to be converted.
+ * @returns A user Object.
+ */
+const decodeQueryUser = (userValues) => {
+  if (userValues[6] === 'none') {
+    userValues[6] = [];
+  } else {
+    userValues[6] = userValues[6].split(',');
+  }
+
+  const result = Object.seal(new User(
+    userValues[0],
+    userValues[1],
+    userValues[2],
+    userValues[3],
+    convertToBoolean(userValues[4]),
+    userValues[5],
+    userValues[6]
   ));
 
   return result;
@@ -122,5 +151,6 @@ module.exports = {
   User,
   validateUser,
   encodeUser,
-  decodeUser
+  decodeRowUser,
+  decodeQueryUser
 };

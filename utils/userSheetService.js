@@ -1,162 +1,120 @@
-const { google } = require('googleapis');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const axios = require('axios');
+const { parse } = require('csv-parse/sync');
 const config = require('./config');
-const {
-  convertToUserObjects,
-  convertRangeToRow,
-  convertRowToRange,
-} = require('../utils/converter');
-const { encodeUser, decodeUser } = require('../models/User');
 const logger = require('./logger');
+const { User, encodeUser, decodeRowUser, decodeQueryUser } = require('../models/User');
 
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
-const spreadsheetId = config.SPREADSHEET_ID;
-const userSheetId = config.USER_SHEET_ID;
+
+const SPREADSHEET_ID = config.SPREADSHEET_ID;
+const USER_SHEET_ID = config.USER_SHEET_ID;
+
 const userSheetService = this;
 
+const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
 
+/**
+ * authentication
+ *
+ * Authenticates the service account to use Google sheets API
+ */
 const authentication = async () => {
-  const auth = new google.auth.GoogleAuth({
-    scopes: SCOPES
+  await doc.useServiceAccountAuth({
+    client_email: config.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    private_key: config.GOOGLE_PRIVATE_KEY,
   });
-
-  const authClient = await auth.getClient();
-  const sheets = google.sheets({
-    version: 'v4',
-    auth: authClient
-  });
-
-  return { sheets };
 };
 
 
-// Returns all users.
-userSheetService.getAllUsers = async () => {
-  const { sheets } = await authentication();
-  const request = {
-    spreadsheetId,
-    range: 'Users'
-  };
-  const response = (await sheets.spreadsheets.values.get(request)).data.values;
-  response.shift(); // Removes the tableheader from the data
+/**
+ * findUsers
+ *
+ * Creates a search query for a the Users sheet and returns an array
+ * of User objects, undefined, or -1 if there is an error with the
+ * search query label.
+ *
+ * @param {string} searchTerm The term to search for in the User sheet.
+ * @param {string} label The label to search through in the User sheet.
+ * @returns undefined or an array of User objects or -1 due to unknown label.
+ */
+userSheetService.findUsers = async (searchTerm, label) => {
+  await authentication();
 
+  // Switch statement to determine what column ID (A, B, C...etc)
+  // to use in the search query. If the label doesn't match any
+  // that are in the sheet, then it will return -1.
+  let columnID;
+  switch (label) {
+    case 'id':
+      columnID = 'A';
+      break;
+    case 'username':
+      columnID = 'B';
+      break;
+    case 'name':
+      columnID = 'C';
+      break;
+    case 'enabled':
+      columnID = 'E';
+      break;
+    case 'privilages':
+      columnID = 'F';
+      break;
+    default:
+      logger.info('label not found');
+      return -1;
+  }
 
-  const users = convertToUserObjects(response);
-
-  return users;
-};
-
-
-// Returns a user or undefined if not found.  MULTIPLE USERS
-userSheetService.findUserByUsername = async (username) => {
-  const { sheets } = await authentication();
-  const request = {
-    spreadsheetId,
-    range: 'Users'
-  };
-  const response = (await sheets.spreadsheets.values.get(request)).data.values;
-  response.shift(); // Removes the tableheader from the data
-
-  const users = convertToUserObjects(response);
-  const user = users.find(u => u.username === username);
-
-  return user;
-};
-
-
-// Returns a user or undefined if not found.  SINGLE USER
-userSheetService.findUserById = async (id) => {
-  const { sheets } = await authentication();
-
-  const searchRequest = {
-    spreadsheetId,
-    requestBody: {
-      dataFilters: [
-        {
-          developerMetadataLookup: {
-            metadataValue: id,
-          }
-        }
-      ]
-    }
+  // Create the query using the columnID and the searchTerm.
+  const query = `select * where ${columnID}='${searchTerm}'`;
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid=${USER_SHEET_ID}&tq=${encodeURI(query)}`;
+  const options = {
+    method: 'GET',
+    headers: { authorization: `Bearer ${doc.jwtClient.credentials.access_token}` }
   };
 
-  const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
-  if (!searchResponse.matchedDeveloperMetadata) {
-    logger.info(`user id: ${id} not found.`);
+  // Make a request to the query URL and get the result.
+  const queryResult = await axios.get(url, options);
+
+  // Parse the result into an array of data.
+  const parsedResult = parse(queryResult.data, {});
+  parsedResult.shift();
+
+  if (parsedResult.length === 0) {
     return undefined;
   }
 
-  const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
-  const range = convertRowToRange(row, 'Users');
+  // Convert the parsed result into User objects to return.
+  let finalResult = [];
+  for (let i = 0; i < parsedResult.length; i++) {
+    const user = decodeQueryUser(parsedResult[i]);
+    finalResult.push(user);
+  }
 
-  const getRequest = {
-    spreadsheetId,
-    range,
-  };
-
-  const getResponse = (await sheets.spreadsheets.values.get(getRequest)).data;
-  const values = getResponse.values[0];
-  const user = decodeUser(values);
-
-  return user;
+  return finalResult;
 };
 
 
-// Save a new user to the Users sheet.  SINGLE USER
+/**
+ * saveUser
+ *
+ * Saves a new user the the User sheet.
+ *
+ * @param {User} user The user object to save to the User sheet.
+ * @returns {User} savedUser The user that was saved to the User sheet.
+ */
 userSheetService.saveUser = async (user) => {
-  const { sheets } = await authentication();
+  await authentication();
+  await doc.loadInfo();
+
+  const userSheet = doc.sheetsById[USER_SHEET_ID];
 
   user = encodeUser(user);
-  console.log('After encoding in userSheetService...', user);
 
-  const appendRequest = {
-    spreadsheetId,
-    range: 'Users',
-    valueInputOption: 'RAW',
-    includeValuesInResponse: true,
-    responseValueRenderOption: 'UNFORMATTED_VALUE',
-    resource: {
-      values: user
-    }
-  };
+  const savedRow = await userSheet.addRow(user, { raw: true, insert: true });
 
-  const appendResponse = (await sheets.spreadsheets.values.append(appendRequest)).data.updates.updatedData;
-  const range = appendResponse.range;
+  const savedUser = decodeRowUser(savedRow);
 
-  const endIndex = convertRangeToRow(range);
-  const startIndex = endIndex - 1;
-  logger.info(`startIndex: ${startIndex}\nendIndex: ${endIndex}`);
-
-  const values = appendResponse.values[0];
-  const savedUser = decodeUser(values);
-
-  const metaDataRequest = {
-    spreadsheetId,
-    // requestBody must be key:value pairs
-    requestBody: {
-      requests: [
-        {
-          createDeveloperMetadata: {
-            developerMetadata: {
-              metadataKey: 'id',
-              metadataValue: savedUser.id,
-              location: {
-                dimensionRange: {
-                  sheetId: userSheetId,
-                  dimension: 'ROWS',
-                  startIndex,
-                  endIndex,
-                }
-              },
-              visibility: 'DOCUMENT',
-            }
-          }
-        }
-      ]
-    },
-  };
-
-  await sheets.spreadsheets.batchUpdate(metaDataRequest);
   return savedUser;
 };
 
