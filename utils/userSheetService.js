@@ -3,7 +3,7 @@ const axios = require('axios');
 const { parse } = require('csv-parse/sync');
 const config = require('./config');
 const logger = require('./logger');
-const { User, encodeUser, decodeRowUser, decodeQueryUser } = require('../models/User');
+const { encodeUser, decodeRowUser, decodeQueryUser } = require('../models/User');
 
 
 const SPREADSHEET_ID = config.SPREADSHEET_ID;
@@ -121,54 +121,54 @@ userSheetService.saveUser = async (user) => {
 
 // Update a user in the Users sheet.  SINGLE USER
 userSheetService.updateUser = async (user) => {
-  const { sheets } = await authentication();
+  await authentication();
+  await doc.loadInfo();
 
-  // User object came with an id so it should exist.
-  // Get the Range of the existing User from the sheet.
-  const searchRequest = {
-    spreadsheetId,
-    requestBody: {
-      dataFilters: [
-        {
-          developerMetadataLookup: {
-            metadataValue: user.id,
-          }
-        }
-      ]
-    }
-  };
+  
+  // const searchRequest = {
+  //   spreadsheetId,
+  //   requestBody: {
+  //     dataFilters: [
+  //       {
+  //         developerMetadataLookup: {
+  //           metadataValue: user.id,
+  //         }
+  //       }
+  //     ]
+  //   }
+  // };
 
-  const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
-  if (!searchResponse.matchedDeveloperMetadata) {
-    logger.info(`user id: ${user.id} not found.`);
-    return undefined;
-  }
+  // const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
+  // if (!searchResponse.matchedDeveloperMetadata) {
+  //   logger.info(`user id: ${user.id} not found.`);
+  //   return undefined;
+  // }
 
-  const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
-  const range = convertRowToRange(row, 'Users');
+  // const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
+  // const range = convertRowToRange(row, 'Users');
 
-  // Convert the user object into a 2D array.
-  user = encodeUser(user);
+  // // Convert the user object into a 2D array.
+  // user = encodeUser(user);
 
-  // Form the update request
-  const updateRequest = {
-    spreadsheetId,
-    range,
-    valueInputOption: 'RAW',
-    includeValuesInResponse: true,
-    responseValueRenderOption: 'UNFORMATTED_VALUE',
-    resource: {
-      values: user
-    }
-  };
+  // // Form the update request
+  // const updateRequest = {
+  //   spreadsheetId,
+  //   range,
+  //   valueInputOption: 'RAW',
+  //   includeValuesInResponse: true,
+  //   responseValueRenderOption: 'UNFORMATTED_VALUE',
+  //   resource: {
+  //     values: user
+  //   }
+  // };
 
-  const updateResponse = (await sheets.spreadsheets.values.update(updateRequest)).data.updatedData;
+  // const updateResponse = (await sheets.spreadsheets.values.update(updateRequest)).data.updatedData;
 
-  // Get the values from the append response and convert it to a user object.
-  const values = updateResponse.values[0];
-  const savedUser = decodeUser(values);
+  // // Get the values from the append response and convert it to a user object.
+  // const values = updateResponse.values[0];
+  // const savedUser = decodeUser(values);
 
-  // Return the saved user object.
+  // // Return the saved user object.
   return savedUser;
 };
 
