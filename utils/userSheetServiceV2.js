@@ -1,6 +1,6 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const axios = require('axios');
-const csvParse = require('csv-parse');
+const { parse } = require('csv-parse/sync');
 const config = require('./config');
 const logger = require('./logger');
 const { User, encodeUser, decodeUser } = require('../models/User');
@@ -48,7 +48,7 @@ userSheetServiceV2.getAllUsers = async () => {
 // Returns a user or undefined if not found.  MULTIPLE USERS
 userSheetServiceV2.findUserByUsername = async (username) => {
   await authentication();
-  await doc.loadInfo();
+
   const query = `select * where B='${username}'`;
   const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid=${USER_SHEET_ID}&tq=${encodeURI(query)}`;
   const options = {
@@ -56,16 +56,18 @@ userSheetServiceV2.findUserByUsername = async (username) => {
     headers: { authorization: `Bearer ${doc.jwtClient.credentials.access_token}` }
   };
 
-  // const response = (await sheets.spreadsheets.values.get(request)).data.values;
-  // response.shift(); // Removes the tableheader from the data
+  const queryResult = await axios.get(url, options);
 
-  // const users = convertToUserObjects(response);
-  // const user = users.find(u => u.username === username);
-  const result = await axios.get(url, options);
-  console.log(result);
-  if (result !== '') csvParse(result, {}, (err, ar) => console.log(ar));
+  const parsedResult = parse(queryResult.data, {});
+  parsedResult.shift();
 
-  return undefined;
+  if (parsedResult.length === 0) {
+    return undefined;
+  }
+
+  
+
+  return 'defined';
 };
 
 

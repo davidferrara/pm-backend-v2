@@ -63,6 +63,16 @@ POST http://localhost:3001/api/login/sign-up
 Content-Type: application/json
 
 {
+  "username": "JohnDoe1234",
+  "name": "John Doe",
+  "password": "SimpleMan"
+}
+
+###
+POST http://localhost:3001/api/login/sign-up
+Content-Type: application/json
+
+{
   "username": "T",
   "name": "S",
   "password": "Science"
