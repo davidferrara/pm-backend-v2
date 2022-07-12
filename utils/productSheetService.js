@@ -212,7 +212,7 @@ productSheetService.findProducts = async (searchTerm, label) => {
  * @param {Product} product The product object to save to the Product sheet.
  * @returns {Product} savedUser The product that was saved to the Product sheet.
  */
-productSheetService.saveUser = async (product) => {
+productSheetService.saveProduct = async (product) => {
   await authentication();
   await doc.loadInfo();
 

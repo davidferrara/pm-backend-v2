@@ -44,10 +44,10 @@ productsRouter.post('/', async (request, response) => {
 
   const id = new ObjectID();
   let postId = generatePostId();
-  let existingId = await productSheetService.findProductByPostId(postId);
+  let existingId = await productSheetService.findProducts(postId, 'postId');
   while (existingId !== undefined) {
     postId = generatePostId();
-    existingId = await productSheetService.findProductByPostId(postId);
+    existingId = await productSheetService.findProducts(postId, 'postId');
   }
 
   const newProduct = Object.seal(new Product(
