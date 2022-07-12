@@ -1,14 +1,20 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
+const axios = require('axios');
+const { parse } = require('csv-parse/sync');
 const config = require('./config');
-const { Product } = require('../models/Product');
 const logger = require('./logger');
+const { Product } = require('../models/Product');
 
 const SPREADSHEET_ID = config.SPREADSHEET_ID;
 const PRODUCT_SHEET_ID = config.PRODUCT_SHEET_ID;
-const productSheetService = this;
 
+const productSheetService = this;
 const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
 
+
+//--------------------------------------------------------------------------------
+// Helper Functions
+//--------------------------------------------------------------------------------
 
 /**
  * authentication
@@ -20,20 +26,19 @@ const authentication = async () => {
     client_email: config.GOOGLE_SERVICE_ACCOUNT_EMAIL,
     private_key: config.GOOGLE_PRIVATE_KEY,
   });
-
-  await doc.loadInfo();
 };
+
 
 /**
  * encodeProduct
  *
- * Takes a productObject and converts it into a 2D array.
+ * Takes a product object and converts it into an array.
  *
  * @param {Object} productObject The product object to be converted.
  * @returns A 2D array containing the productObject's values.
  */
 const encodeProduct = (productObject) => {
-  const result = [Object.values(productObject)];
+  const result = Object.values(productObject);
 
   return result;
 };
@@ -42,12 +47,42 @@ const encodeProduct = (productObject) => {
 /**
  * decodeProduct
  *
- * Takes an array and converts it into productValues.
+ * Takes a GoogleSpreadsheetRow and converts it into a product object.
  *
- * @param {Array} productValues The product array to be converted.
+ * @param {GoogleSpreadsheetRow} rowObject The product array to be converted.
  * @returns An product Object.
  */
-const decodeProduct = (productValues) => {
+const decodeRowProduct = (rowObject) => {
+  const result = Object.seal(new Product(
+    rowObject.id,
+    rowObject.postId,
+    rowObject.client,
+    rowObject.reason,
+    rowObject.condition,
+    rowObject.conditionNotes,
+    rowObject.asin,
+    rowObject.expirationDate,
+    Number(rowObject.quantity),
+    rowObject.location,
+    rowObject.dateCreated,
+    rowObject.dateModified,
+    rowObject.masterSku,
+    rowObject.user
+  ));
+
+  return result;
+};
+
+
+/**
+ * decodeQueryProduct
+ *
+ * Takes a query result and converts it into a product object.
+ *
+ * @param {Array} productValues The GoogleSpreadsheetRow to be converted.
+ * @returns A user Object.
+ */
+const decodeQueryProduct = (productValues) => {
   const result = Object.seal(new Product(
     productValues[0],
     productValues[1],
@@ -57,7 +92,7 @@ const decodeProduct = (productValues) => {
     productValues[5],
     productValues[6],
     productValues[7],
-    Number(productValues[8]),
+    productValues[8],
     productValues[9],
     productValues[10],
     productValues[11],
@@ -69,295 +104,167 @@ const decodeProduct = (productValues) => {
 };
 
 
-productSheetService.test = async () => {
+//--------------------------------------------------------------------------------
+// Service Functions
+//--------------------------------------------------------------------------------
+
+/**
+ * findProducts
+ *
+ * Creates a search query for a the Products sheet and returns an array
+ * of Product objects, undefined, or -1 if there is an error with the
+ * search query label.
+ *
+ * @param {string} searchTerm The term to search for in the Product sheet.
+ * @param {string} label The label to search through in the Product sheet.
+ * @returns undefined or an array of Product objects or -1 due to unknown label.
+ */
+productSheetService.findProducts = async (searchTerm, label) => {
   await authentication();
 
-  const productSheet = await doc.sheetsById[PRODUCT_SHEET_ID];
+  // Switch statement to determine what column ID (A, B, C...etc)
+  // to use in the search query. If the label doesn't match any
+  // that are in the sheet, then it will return -1.
+  let columnID;
+  switch (label) {
+    case 'id':
+      columnID = 'A';
+      break;
+    case 'postId':
+      columnID = 'B';
+      break;
+    case 'client':
+      columnID = 'C';
+      break;
+    case 'reason':
+      columnID = 'D';
+      break;
+    case 'condition':
+      columnID = 'E';
+      break;
+    case 'conditionNotes':
+      columnID = 'F';
+      break;
+    case 'asin':
+      columnID = 'G';
+      break;
+    case 'expirationDate':
+      columnID = 'H';
+      break;
+    case 'quantity':
+      columnID = 'I';
+      break;
+    case 'location':
+      columnID = 'J';
+      break;
+    case 'dateCreated':
+      columnID = 'K';
+      break;
+    case 'dateModified':
+      columnID = 'L';
+      break;
+    case 'masterSku':
+      columnID = 'M';
+      break;
+    case 'user':
+      columnID = 'N';
+      break;
+    default:
+      logger.info('label not found');
+      return -1;
+  }
 
-  const rows = await productSheet.getRows();
-  console.log(rows.length);
-
-  const newProduct = Object.seal(new Product(
-    'ABCDEF',
-    '0123345',
-    'ANJ',
-    'Barred Limitation',
-    'New',
-    '',
-    'B07BS87FSG3',
-    '',
-    6,
-    'IDK',
-    'Yesterday',  // Date Created
-    'Today',  // Date Modified
-    '',
-    'ME LOL'
-  ));
-
-  const newRow = await productSheet.addRow(newProduct);
-
-
-  return newRow;
-};
-
-
-// Returns a user or undefined if not found.  SINGLE PRODUCT
-productSheetService.findProductById = async (id) => {
-  const { sheets } = await authentication();
-
-  const searchRequest = {
-    spreadsheetId,
-    requestBody: {
-      dataFilters: [
-        {
-          developerMetadataLookup: {
-            metadataValue: id,
-          }
-        }
-      ]
-    }
+  // Create the query using the columnID and the searchTerm.
+  const query = `select * where ${columnID}='${searchTerm}'`;
+  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid=${PRODUCT_SHEET_ID}&tq=${encodeURI(query)}`;
+  const options = {
+    method: 'GET',
+    headers: { authorization: `Bearer ${doc.jwtClient.credentials.access_token}` }
   };
 
-  const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
-  if (!searchResponse.matchedDeveloperMetadata) {
-    logger.info(`product id: ${id} not found.`);
+  // Make a request to the query URL and get the result.
+  const queryResult = (await axios.get(url, options)).data;
+
+  // Parse the result into an array of data.
+  const parsedResult = parse(queryResult, {});
+  parsedResult.shift();
+
+  if (parsedResult.length === 0) {
     return undefined;
   }
 
-  const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
-  const range = convertRowToRange(row, 'Products');
+  // Convert the parsed result into User objects to return.
+  let finalResult = [];
+  for (let i = 0; i < parsedResult.length; i++) {
+    const user = decodeQueryProduct(parsedResult[i]);
+    finalResult.push(user);
+  }
 
-  const getRequest = {
-    spreadsheetId,
-    range,
-  };
-
-  const getResponse = (await sheets.spreadsheets.values.get(getRequest)).data;
-  const values = getResponse.values[0];
-  const product = decodeProduct(values);
-
-  return product;
+  return finalResult;
 };
 
 
-// Returns a user or undefined if not found.  SINGLE PRODUCT
-productSheetService.findProductByPostId = async (postId) => {
-  const { sheets } = await authentication();
+/**
+ * saveProduct
+ *
+ * Saves a new product to the Product sheet.
+ *
+ * @param {Product} product The product object to save to the Product sheet.
+ * @returns {Product} savedUser The product that was saved to the Product sheet.
+ */
+productSheetService.saveUser = async (product) => {
+  await authentication();
+  await doc.loadInfo();
 
-  const searchRequest = {
-    spreadsheetId,
-    requestBody: {
-      dataFilters: [
-        {
-          developerMetadataLookup: {
-            metadataValue: postId,
-          }
-        }
-      ]
-    }
-  };
-
-  const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
-  if (!searchResponse.matchedDeveloperMetadata) {
-    logger.info(`product postId: ${postId} not found.`);
-    return undefined;
-  }
-
-  const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
-  const range = convertRowToRange(row, 'Products');
-
-  const getRequest = {
-    spreadsheetId,
-    range,
-  };
-
-  const getResponse = (await sheets.spreadsheets.values.get(getRequest)).data;
-  const values = getResponse.values[0];
-  const product = decodeProduct(values);
-
-  return product;
-};
-
-
-// Returns products or undefined if not found.  MULTIPLE PRODUCTS
-productSheetService.findProductsByUser = async (user) => {
-  const { sheets } = await authentication();
-
-  const request = {
-    spreadsheetId,
-    requestBody: {
-      dataFilters: [
-        {
-          developerMetadataLookup: {
-            metadataKey: 'user',
-            metadataValue: user.id,
-          }
-        }
-      ]
-    }
-  };
-
-  const response = await sheets.spreadsheets.values.batchGetByDataFilter(request);
-  const valueRanges = response.data.valueRanges;
-
-  if (!valueRanges) {
-    logger.info(`products for user.id: ${user.id} not found.`);
-    return undefined;
-  }
-
-  const products = []; // Array of product objects
-  for (let i = 0; i < valueRanges.length; i++) {
-    const values = valueRanges[i].valueRange.values[0];
-    products.push(decodeProduct(values));
-  }
-
-  return products;
-};
-
-
-// Save a new user to the Users sheet.  SINGLE PRODUCT
-productSheetService.saveProduct = async (product) => {
-  const { sheets } = await authentication();
+  const productSheet = doc.sheetsById[PRODUCT_SHEET_ID];
 
   product = encodeProduct(product);
 
-  const appendRequest = {
-    spreadsheetId,
-    range: 'Products',
-    valueInputOption: 'RAW',
-    includeValuesInResponse: true,
-    responseValueRenderOption: 'UNFORMATTED_VALUE',
-    resource: {
-      values: product
-    }
-  };
+  const savedRow = await productSheet.addRow(product, { raw: true, insert: true });
 
-  const appendResponse = (await sheets.spreadsheets.values.append(appendRequest)).data.updates.updatedData;
-  const range = appendResponse.range;
-
-  const endIndex = convertRangeToRow(range);
-  const startIndex = endIndex - 1;
-  logger.info(`startIndex: ${startIndex}\nendIndex: ${endIndex}`);
-
-  const values = appendResponse.values[0];
-  const savedProduct = decodeProduct(values);
-
-  const metaDataRequest = {
-    spreadsheetId,
-    // requestBody must be key:value pairs
-    requestBody: {
-      requests: [
-        {
-          createDeveloperMetadata: {
-            developerMetadata: {
-              metadataKey: 'id',
-              metadataValue: savedProduct.id,
-              location: {
-                dimensionRange: {
-                  sheetId: productSheetId,
-                  dimension: 'ROWS',
-                  startIndex,
-                  endIndex,
-                }
-              },
-              visibility: 'DOCUMENT',
-            }
-          }
-        },
-        {
-          createDeveloperMetadata: {
-            developerMetadata: {
-              metadataKey: 'postId',
-              metadataValue: savedProduct.postId,
-              location: {
-                dimensionRange: {
-                  sheetId: productSheetId,
-                  dimension: 'ROWS',
-                  startIndex,
-                  endIndex,
-                }
-              },
-              visibility: 'DOCUMENT',
-            }
-          }
-        },
-        {
-          createDeveloperMetadata: {
-            developerMetadata: {
-              metadataKey: 'user',
-              metadataValue: savedProduct.user,
-              location: {
-                dimensionRange: {
-                  sheetId: productSheetId,
-                  dimension: 'ROWS',
-                  startIndex,
-                  endIndex,
-                }
-              },
-              visibility: 'DOCUMENT',
-            }
-          }
-        }
-      ]
-    },
-  };
-
-  await sheets.spreadsheets.batchUpdate(metaDataRequest);
-  return savedProduct;
+  const savedUser = decodeRowProduct(savedRow);
+  return savedUser;
 };
 
 
-// Update a user in the Users sheet.  SINGLE PRODUCT
-productSheetService.updateProduct = async (user) => {
-  const { sheets } = await authentication();
+/**
+ * updateProduct
+ *
+ * Updates an existing product on the Product sheet.
+ *
+ * @param {Product} product The product object to save to the Product sheet.
+ * @returns {Product} savedUser The product that was saved to the Product sheet.
+ */
+productSheetService.updateProduct = async (product) => {
+  await authentication();
+  await doc.loadInfo();
 
-  // User object came with an id so it should exist.
-  // Get the Range of the existing User from the sheet.
-  const searchRequest = {
-    spreadsheetId,
-    requestBody: {
-      dataFilters: [
-        {
-          developerMetadataLookup: {
-            metadataValue: user.id,
-          }
-        }
-      ]
-    }
-  };
+  const productSheet = doc.sheetsById[PRODUCT_SHEET_ID];
 
-  const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
-  if (!searchResponse.matchedDeveloperMetadata) {
-    logger.info(`user id: ${user.id} not found.`);
-    return undefined;
-  }
+  // Get all the rows and find the one with mathcing ID.
+  const rows = await productSheet.getRows();
+  const index = rows.findIndex(row => row.id === product.id);
 
-  const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
-  const range = convertRowToRange(row);
+  // Change the product object into an array of values.
+  product = encodeProduct(product);
 
-  // Convert the user object into a 2D array.
-  user = encodeUser(user);
+  // Update all the values.
+  rows[index].client = product[2];
+  rows[index].reason = product[3];
+  rows[index].condition = product[4];
+  rows[index].conditionNotes = product[5];
+  rows[index].asin = product[6];
+  rows[index].expirationDate = product[7];
+  rows[index].quantity = product[8];
+  rows[index].location = product[9];
+  rows[index].dateModified = product[11];
+  rows[index].masterSku = product[12];
 
-  // Form the update request
-  const updateRequest = {
-    spreadsheetId,
-    range,
-    valueInputOption: 'RAW',
-    includeValuesInResponse: true,
-    responseValueRenderOption: 'UNFORMATTED_VALUE',
-    resource: {
-      values: user
-    }
-  };
+  // Save the row with the new values.
+  await rows[index].save({ raw: true });
 
-  const updateResponse = (await sheets.spreadsheets.values.update(updateRequest)).data.updatedData;
-
-  // Get the values from the append response and convert it to a user object.
-  const values = updateResponse.values[0];
-  const savedUser = decodeUser(values);
-
-  // Return the saved user object.
-  return savedUser;
+  const savedProduct = decodeRowProduct(rows[index]);
+  return savedProduct;
 };
 
 module.exports = productSheetService;

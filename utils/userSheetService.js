@@ -123,7 +123,6 @@ const convertToBoolean = (str) => {
 // Service Functions
 //--------------------------------------------------------------------------------
 
-
 /**
  * findUsers
  *
