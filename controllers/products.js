@@ -19,7 +19,7 @@ const generatePostId = () => {
 productsRouter.get('/', async (request, response) => {
   const loggedInUser = request.user;
 
-  const products = await productSheetService.findProductsByUser(loggedInUser);
+  const products = await productSheetService.findProducts(loggedInUser.id, 'user');
 
   response.json(products);
 });
