@@ -1,14 +1,20 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const config = require('./config');
-const { Product, encodeProduct, decodeProduct } = require('../models/Product');
+const { Product } = require('../models/Product');
 const logger = require('./logger');
 
 const SPREADSHEET_ID = config.SPREADSHEET_ID;
 const PRODUCT_SHEET_ID = config.PRODUCT_SHEET_ID;
-const productSheetServiceV2 = this;
+const productSheetService = this;
 
 const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
 
+
+/**
+ * authentication
+ *
+ * Authenticates the service account to use Google sheets API
+ */
 const authentication = async () => {
   await doc.useServiceAccountAuth({
     client_email: config.GOOGLE_SERVICE_ACCOUNT_EMAIL,
@@ -18,8 +24,52 @@ const authentication = async () => {
   await doc.loadInfo();
 };
 
+/**
+ * encodeProduct
+ *
+ * Takes a productObject and converts it into a 2D array.
+ *
+ * @param {Object} productObject The product object to be converted.
+ * @returns A 2D array containing the productObject's values.
+ */
+const encodeProduct = (productObject) => {
+  const result = [Object.values(productObject)];
 
-productSheetServiceV2.test = async () => {
+  return result;
+};
+
+
+/**
+ * decodeProduct
+ *
+ * Takes an array and converts it into productValues.
+ *
+ * @param {Array} productValues The product array to be converted.
+ * @returns An product Object.
+ */
+const decodeProduct = (productValues) => {
+  const result = Object.seal(new Product(
+    productValues[0],
+    productValues[1],
+    productValues[2],
+    productValues[3],
+    productValues[4],
+    productValues[5],
+    productValues[6],
+    productValues[7],
+    Number(productValues[8]),
+    productValues[9],
+    productValues[10],
+    productValues[11],
+    productValues[12],
+    productValues[13]
+  ));
+
+  return result;
+};
+
+
+productSheetService.test = async () => {
   await authentication();
 
   const productSheet = await doc.sheetsById[PRODUCT_SHEET_ID];
@@ -52,7 +102,7 @@ productSheetServiceV2.test = async () => {
 
 
 // Returns a user or undefined if not found.  SINGLE PRODUCT
-productSheetServiceV2.findProductById = async (id) => {
+productSheetService.findProductById = async (id) => {
   const { sheets } = await authentication();
 
   const searchRequest = {
@@ -91,7 +141,7 @@ productSheetServiceV2.findProductById = async (id) => {
 
 
 // Returns a user or undefined if not found.  SINGLE PRODUCT
-productSheetServiceV2.findProductByPostId = async (postId) => {
+productSheetService.findProductByPostId = async (postId) => {
   const { sheets } = await authentication();
 
   const searchRequest = {
@@ -130,7 +180,7 @@ productSheetServiceV2.findProductByPostId = async (postId) => {
 
 
 // Returns products or undefined if not found.  MULTIPLE PRODUCTS
-productSheetServiceV2.findProductsByUser = async (user) => {
+productSheetService.findProductsByUser = async (user) => {
   const { sheets } = await authentication();
 
   const request = {
@@ -166,7 +216,7 @@ productSheetServiceV2.findProductsByUser = async (user) => {
 
 
 // Save a new user to the Users sheet.  SINGLE PRODUCT
-productSheetServiceV2.saveProduct = async (product) => {
+productSheetService.saveProduct = async (product) => {
   const { sheets } = await authentication();
 
   product = encodeProduct(product);
@@ -258,7 +308,7 @@ productSheetServiceV2.saveProduct = async (product) => {
 
 
 // Update a user in the Users sheet.  SINGLE PRODUCT
-productSheetServiceV2.updateProduct = async (user) => {
+productSheetService.updateProduct = async (user) => {
   const { sheets } = await authentication();
 
   // User object came with an id so it should exist.
@@ -310,4 +360,4 @@ productSheetServiceV2.updateProduct = async (user) => {
   return savedUser;
 };
 
-module.exports = productSheetServiceV2;
+module.exports = productSheetService;

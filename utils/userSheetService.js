@@ -3,15 +3,18 @@ const axios = require('axios');
 const { parse } = require('csv-parse/sync');
 const config = require('./config');
 const logger = require('./logger');
-const { encodeUser, decodeRowUser, decodeQueryUser } = require('../models/User');
-
+const { User } = require('../models/User');
 
 const SPREADSHEET_ID = config.SPREADSHEET_ID;
 const USER_SHEET_ID = config.USER_SHEET_ID;
 
 const userSheetService = this;
-
 const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
+
+
+//--------------------------------------------------------------------------------
+// Helper Functions
+//--------------------------------------------------------------------------------
 
 /**
  * authentication
@@ -24,6 +27,101 @@ const authentication = async () => {
     private_key: config.GOOGLE_PRIVATE_KEY,
   });
 };
+
+
+/**
+ * encodeUser
+ *
+ * Takes a user object and converts it into an array.
+ *
+ * @param {Object} userObject The user object to be converted.
+ * @returns An array containing the userObject's values.
+ */
+const encodeUser = (userObject) => {
+  const result = Object.values(userObject);
+  result[6] = result[6].join(',');
+  if (result[6] === '') {
+    result[6] = 'none';
+  }
+
+  return result;
+};
+
+
+/**
+ * decodeRowUser
+ *
+ * Takes a GoogleSpreadsheetRow and converts it into a user object.
+ *
+ * @param {GoogleSpreadsheetRow} rowObject The GoogleSpreadsheetRow to be converted.
+ * @returns A user Object.
+ */
+const decodeRowUser = (rowObject) => {
+  if (rowObject.products === 'none') {
+    rowObject.products = [];
+  } else {
+    rowObject.products = rowObject.products.split(',');
+  }
+
+  const result = Object.seal(new User(
+    rowObject.id,
+    rowObject.username,
+    rowObject.name,
+    rowObject.passwordHash,
+    convertToBoolean(rowObject.enabled),
+    rowObject.privilages,
+    rowObject.products
+  ));
+
+  return result;
+};
+
+
+/**
+ * decodeQueryUser
+ *
+ * Takes a query result and converts it into a user object.
+ *
+ * @param {Array} userValues The GoogleSpreadsheetRow to be converted.
+ * @returns A user Object.
+ */
+const decodeQueryUser = (userValues) => {
+  if (userValues[6] === 'none') {
+    userValues[6] = [];
+  } else {
+    userValues[6] = userValues[6].split(',');
+  }
+
+  const result = Object.seal(new User(
+    userValues[0],
+    userValues[1],
+    userValues[2],
+    userValues[3],
+    convertToBoolean(userValues[4]),
+    userValues[5],
+    userValues[6]
+  ));
+
+  return result;
+};
+
+
+/**
+ * convertToBoolean
+ *
+ * Takes a string 'TRUE' or 'FALSE' and converts it to a boolean type.
+ * @param {String} str The string to be converted to a boolean type.
+ * @returns true or false.
+ */
+const convertToBoolean = (str) => {
+  const istrueset = (str === 'TRUE');
+  return istrueset;
+};
+
+
+//--------------------------------------------------------------------------------
+// Service Functions
+//--------------------------------------------------------------------------------
 
 
 /**
@@ -74,10 +172,10 @@ userSheetService.findUsers = async (searchTerm, label) => {
   };
 
   // Make a request to the query URL and get the result.
-  const queryResult = await axios.get(url, options);
+  const queryResult = (await axios.get(url, options)).data;
 
   // Parse the result into an array of data.
-  const parsedResult = parse(queryResult.data, {});
+  const parsedResult = parse(queryResult, {});
   parsedResult.shift();
 
   if (parsedResult.length === 0) {
@@ -98,7 +196,7 @@ userSheetService.findUsers = async (searchTerm, label) => {
 /**
  * saveUser
  *
- * Saves a new user the the User sheet.
+ * Saves a new user to the User sheet.
  *
  * @param {User} user The user object to save to the User sheet.
  * @returns {User} savedUser The user that was saved to the User sheet.
@@ -114,61 +212,43 @@ userSheetService.saveUser = async (user) => {
   const savedRow = await userSheet.addRow(user, { raw: true, insert: true });
 
   const savedUser = decodeRowUser(savedRow);
-
   return savedUser;
 };
 
 
-// Update a user in the Users sheet.  SINGLE USER
+/**
+ * updateUser
+ *
+ * Updates an existing user on the User sheet.
+ *
+ * @param {User} user The user object to save to the User sheet.
+ * @returns {User} savedUser The user that was saved to the User sheet.
+ */
 userSheetService.updateUser = async (user) => {
   await authentication();
   await doc.loadInfo();
 
-  
-  // const searchRequest = {
-  //   spreadsheetId,
-  //   requestBody: {
-  //     dataFilters: [
-  //       {
-  //         developerMetadataLookup: {
-  //           metadataValue: user.id,
-  //         }
-  //       }
-  //     ]
-  //   }
-  // };
+  const userSheet = doc.sheetsById[USER_SHEET_ID];
 
-  // const searchResponse = (await sheets.spreadsheets.developerMetadata.search(searchRequest)).data;
-  // if (!searchResponse.matchedDeveloperMetadata) {
-  //   logger.info(`user id: ${user.id} not found.`);
-  //   return undefined;
-  // }
+  // Get all the rows and find the one with mathcing ID.
+  const rows = await userSheet.getRows();
+  const index = rows.findIndex(row => row.id === user.id);
 
-  // const row = searchResponse.matchedDeveloperMetadata[0].developerMetadata.location.dimensionRange.endIndex;
-  // const range = convertRowToRange(row, 'Users');
+  // Change the user object into an array of values.
+  user = encodeUser(user);
 
-  // // Convert the user object into a 2D array.
-  // user = encodeUser(user);
+  // Update all the values.
+  rows[index].username = user[1];
+  rows[index].name = user[2];
+  rows[index].passwordHash = user[3];
+  rows[index].enabled = user[4];
+  rows[index].privilages = user[5];
+  rows[index].products = user[6];
 
-  // // Form the update request
-  // const updateRequest = {
-  //   spreadsheetId,
-  //   range,
-  //   valueInputOption: 'RAW',
-  //   includeValuesInResponse: true,
-  //   responseValueRenderOption: 'UNFORMATTED_VALUE',
-  //   resource: {
-  //     values: user
-  //   }
-  // };
+  // Save the row with the new values.
+  await rows[index].save({ raw: true });
 
-  // const updateResponse = (await sheets.spreadsheets.values.update(updateRequest)).data.updatedData;
-
-  // // Get the values from the append response and convert it to a user object.
-  // const values = updateResponse.values[0];
-  // const savedUser = decodeUser(values);
-
-  // // Return the saved user object.
+  const savedUser = decodeRowUser(rows[index]);
   return savedUser;
 };
 

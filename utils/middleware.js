@@ -29,7 +29,7 @@ const userExtractor = async (request, response, next) => {
     return response.status(401).json({ error: 'token missing or invalid' });
   }
 
-  request.user = await userSheetService.findUserById(decodedToken.id);
+  request.user = (await userSheetService.findUsers(decodedToken.id, 'id'))[0];
 
   next();
 };

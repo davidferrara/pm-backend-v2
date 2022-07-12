@@ -102,54 +102,7 @@ const validateProduct = (product) => {
 };
 
 
-/**
- * encodeProduct
- *
- * Takes a productObject and converts it into a 2D array.
- *
- * @param {Object} productObject The product object to be converted.
- * @returns A 2D array containing the productObject's values.
- */
-const encodeProduct = (productObject) => {
-  const result = [Object.values(productObject)];
-
-  return result;
-};
-
-
-/**
- * decodeUser
- *
- * Takes an array and converts it into productValues.
- *
- * @param {Array} productValues The product array to be converted.
- * @returns An product Object.
- */
-const decodeProduct = (productValues) => {
-  const result = Object.seal(new Product(
-    productValues[0],
-    productValues[1],
-    productValues[2],
-    productValues[3],
-    productValues[4],
-    productValues[5],
-    productValues[6],
-    productValues[7],
-    Number(productValues[8]),
-    productValues[9],
-    productValues[10],
-    productValues[11],
-    productValues[12],
-    productValues[13]
-  ));
-
-  return result;
-};
-
-
 module.exports = {
   Product,
-  validateProduct,
-  encodeProduct,
-  decodeProduct
+  validateProduct
 };

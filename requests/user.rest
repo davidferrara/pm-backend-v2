@@ -3,40 +3,40 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1c
 
 ###
 
-PUT http://localhost:3001/api/users/62a25ad7c3b83c3d305fe7f2
+PUT http://localhost:3001/api/users/62cd8b9f25caf2d45d46edb1
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTY1MzIwNDksImV4cCI6MTY1NjU2NDQ0OX0.jdjkN5szpAI_C2EHqHN-oRNgdfWqs7ORYeU1cIJeWzg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmM3MTJjZDEzMGJhYzgxMjZmMDkzYmUiLCJpYXQiOjE2NTc2NDE0NjgsImV4cCI6MTY1NzY3Mzg2OH0.ghTJIcpidUvEZHC_bGaLNDgHgMVT3gIHHSCKc2WP3Xc
 
 {
   "username": "BossMan101"
 }
 
 ###
-PUT http://localhost:3001/api/users/62a25ad7c3b83c3d305fe7f2
+PUT http://localhost:3001/api/users/62cdac496a1c941e7ef24a75
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTY1MzIwNDksImV4cCI6MTY1NjU2NDQ0OX0.jdjkN5szpAI_C2EHqHN-oRNgdfWqs7ORYeU1cIJeWzg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmM3MTJjZDEzMGJhYzgxMjZmMDkzYmUiLCJpYXQiOjE2NTc2NDM1MzYsImV4cCI6MTY1NzY3NTkzNn0.9VHs59iLPlh2M-7NH3-X8lyXSptiDc-HrWQBrQGSWzw
 
 {
-  "username": "MoneyMonger",
+  "username": "BossMan101",
   "enabled": false
 }
 
 ###
-PUT http://localhost:3001/api/users/62a25adec3b83c3d305fe7f4
+PUT http://localhost:3001/api/users/62cd8bae25caf2d45d46edb2
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTY1MzIwNDksImV4cCI6MTY1NjU2NDQ0OX0.jdjkN5szpAI_C2EHqHN-oRNgdfWqs7ORYeU1cIJeWzg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmM3MTJjZDEzMGJhYzgxMjZmMDkzYmUiLCJpYXQiOjE2NTc2NDE0NjgsImV4cCI6MTY1NzY3Mzg2OH0.ghTJIcpidUvEZHC_bGaLNDgHgMVT3gIHHSCKc2WP3Xc
 
 {
   "enabled": true,
-  "name": "Sheldon Plankton"
+  "name": "Patrick Star"
 }
 
 ###
-PUT http://localhost:3001/api/users/62a25adec3b83c3d305fe7f4
+PUT http://localhost:3001/api/users/62cd8bae25caf2d45d46edb2
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmEyNWFjZmMzYjgzYzNkMzA1ZmU3ZjEiLCJpYXQiOjE2NTY1MzIwNDksImV4cCI6MTY1NjU2NDQ0OX0.jdjkN5szpAI_C2EHqHN-oRNgdfWqs7ORYeU1cIJeWzg
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmM3MTJjZDEzMGJhYzgxMjZmMDkzYmUiLCJpYXQiOjE2NTc2NDE0NjgsImV4cCI6MTY1NzY3Mzg2OH0.ghTJIcpidUvEZHC_bGaLNDgHgMVT3gIHHSCKc2WP3Xc
 
 {
   "enabled": false,
-  "name": "Sheldon Plankton"
+  "name": "Patrick Star"
 }
