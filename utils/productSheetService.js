@@ -267,4 +267,35 @@ productSheetService.updateProduct = async (product) => {
   return savedProduct;
 };
 
+
+/**
+ * deleteProduct
+ *
+ * Deletes an existing product off the Product sheet.
+ *
+ * @param {Product} product The product object to delete off the Product sheet.
+ * @returns {Product} deletedProduct The product that was saved to the Product sheet.
+ */
+productSheetService.deleteProduct = async (product) => {
+  await authentication();
+  await doc.loadInfo();
+
+  const productSheet = doc.sheetsById[PRODUCT_SHEET_ID];
+
+  // Get all the rows and find the one with mathcing ID.
+  const rows = await productSheet.getRows();
+  const index = rows.findIndex(row => row.id === product.id);
+
+  // Change the product object into an array of values.
+  product = encodeProduct(product);
+
+  // Get the row for an undo.
+  const deletedProduct = decodeRowProduct(rows[index]);
+
+  // Delete the row.
+  await rows[index].delete();
+
+  return deletedProduct;
+};
+
 module.exports = productSheetService;

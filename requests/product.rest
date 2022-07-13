@@ -69,3 +69,22 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1c
 GET http://localhost:3001/api/products
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmM3MTJjZDEzMGJhYzgxMjZmMDkzYmUiLCJpYXQiOjE2NTc3MjIzMDQsImV4cCI6MTY1Nzc1NDcwNH0.KJXVQ36St1FimVCtB9z15lzhdclxiMvn-i8VKjJh0f4
+
+###
+
+PUT http://localhost:3001/api/products/62ced6051e537e16c0124684
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmM3MTJjZDEzMGJhYzgxMjZmMDkzYmUiLCJpYXQiOjE2NTc3MjIzMDQsImV4cCI6MTY1Nzc1NDcwNH0.KJXVQ36St1FimVCtB9z15lzhdclxiMvn-i8VKjJh0f4
+
+{
+  "condition": "Used Very New",
+  "expirationDate": "LOL HERE",
+  "quantity": 9,
+  "location": "OS-0222"
+}
+
+###
+
+DELETE http://localhost:3001/api/products/62ced6051e537e16c0124684
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyU3BvbmdlMTIzIiwiaWQiOiI2MmM3MTJjZDEzMGJhYzgxMjZmMDkzYmUiLCJpYXQiOjE2NTc3MjIzMDQsImV4cCI6MTY1Nzc1NDcwNH0.KJXVQ36St1FimVCtB9z15lzhdclxiMvn-i8VKjJh0f4
