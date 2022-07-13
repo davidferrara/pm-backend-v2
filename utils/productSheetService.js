@@ -92,7 +92,7 @@ const decodeQueryProduct = (productValues) => {
     productValues[5],
     productValues[6],
     productValues[7],
-    productValues[8],
+    Number(productValues[8]),
     productValues[9],
     productValues[10],
     productValues[11],

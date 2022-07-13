@@ -82,31 +82,37 @@ productsRouter.post('/', async (request, response) => {
 
 // Update a product
 productsRouter.put('/:id', async (request, response) => {
-  // const body = request.body;
-  // const id = request.params.id;
+  const loggedInUser = request.user;
 
-  // const productToChange = await Product.findById(id);
-  // if (productToChange === null) {
-  //   return response.status(404).json({ error: 'Product not found' });
-  // }
+  if(loggedInUser.enabled === false) {
+    return response.status(401).json({ 'error': 'You are not enabled' });
+  }
+  const body = request.body;
+  const id = request.params.id;
 
-  // const changedProduct = {
-  //   ...productToChange._doc,
-  //   client: body.client,
-  //   reason: body.reason,
-  //   condition: body.condition,
-  //   conditionNote: body.conditionNote,
-  //   asin: body.asin,
-  //   expiration: body.expiration,
-  //   quantity: body.quantity,
-  //   location: body.location,
-  //   dateModified: new Date(),
+  const productToChange = await productSheetService.findProducts(id, 'id');
+  if (productToChange === null) {
+    return response.status(404).json({ error: 'Product not found' });
+  }
 
-  // };
+  const changedProduct = {
+    ...productToChange._doc,
+    client: body.client,
+    reason: body.reason,
+    condition: body.condition,
+    conditionNote: body.conditionNote,
+    asin: body.asin,
+    expiration: body.expiration,
+    quantity: body.quantity,
+    location: body.location,
+    dateModified: new Date().toISOString(),
 
-  // const updatedProduct = await Product.findByIdAndUpdate(id, changedProduct, { new: true });
-  // response.json(updatedProduct);
-  response.json({ message: 'edit products enpoint' });
+  };
+
+  console.log(changedProduct);
+
+  const updatedProduct = await productSheetService.updateProduct(changedProduct);
+  response.json(updatedProduct);
 });
 
 // Delete a product
