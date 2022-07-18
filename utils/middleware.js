@@ -39,14 +39,17 @@ const unknownEndpoint = (request, response) => {
 };
 
 const errorHandler = (error, request, response, next) => {
+  logger.error(error.name);
   logger.error(error.message);
 
   if (error.name === 'UserError') {
     return response.status(400).json({ error: error.message });
+  } else if (error.name === 'ProductError') {
+    return response.status(400).json({ error: error.message });
   } else if (error.name === 'JsonWebTokenError') {
     return response.status(401).json({ error: 'invalid token' });
   } else if (error.name === 'TokenExpiredError') {
-    return response.status(401).json({ error: 'token expired' });
+    return response.status(401).json({ error: error.message });
   }
 
   next(error);
